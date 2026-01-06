@@ -1,0 +1,1993 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+<head>
+    <meta charset="UTF-8">
+    <!--meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Halal Scanner - Check Food Products</title>
+    <!-- PWA manifest for installability -->
+    <link rel="manifest" href="manifest.json">
+    <!-- Icons for PWA -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🕌</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🕌</text></svg>">
+    <!-- CDN for Tesseract.js OCR library -->
+    <script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- CDN for ZXing barcode scanning library -->
+    <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Georgia', 'Times New Roman', Times, serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            /* Classic Color Palette */
+            --primary-color: #2C3E50;      /* Deep Navy Blue */
+            --secondary-color: #7D3C98;    /* Royal Purple */
+            --accent-color: #D35400;       /* Burnt Orange */
+            --success-color: #27AE60;      /* Forest Green */
+            --danger-color: #C0392B;       /* Crimson Red */
+            --warning-color: #F39C12;      /* Golden Yellow */
+            
+            /* Neutral Colors */
+            --light-color: #F8F9FA;        /* Off White */
+            --medium-light: #E8ECEF;
+            --medium-color: #BDC3C7;       /* Silver Gray */
+            --dark-color: #2C3E50;         /* Navy */
+            --text-dark: #2C3E50;          /* Dark Text */
+            --text-light: #5D6D7E;         /* Medium Gray Text */
+            --text-white: #FFFFFF;         /* White Text */
+            
+            /* UI Elements */
+            --border-radius: 8px;
+            --border-radius-lg: 12px;
+            --border-radius-sm: 4px;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.12);
+            --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.15);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ed 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Header styles - Classic Elegant */
+        header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1A252F 100%);
+            color: var(--text-white);
+            padding: 1.5rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+            border-bottom: 4px solid var(--secondary-color);
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--secondary-color), var(--accent-color), var(--secondary-color));
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            font-weight: 300;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        /* Main content container */
+        .container {
+            flex: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem 1rem;
+            width: 100%;
+        }
+
+        /* Mode selection tabs - Classic Card Style */
+        .mode-tabs {
+            display: flex;
+            background-color: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--medium-color);
+            position: relative;
+        }
+
+        .mode-tab {
+            flex: 1;
+            padding: 1.25rem 0.5rem;
+            text-align: center;
+            background-color: transparent;
+            border: none;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            min-height: 80px;
+            justify-content: center;
+            border-right: 1px solid var(--medium-light);
+        }
+
+        .mode-tab:last-child {
+            border-right: none;
+        }
+
+        .mode-tab .tab-icon {
+            font-size: 1.5rem;
+            transition: var(--transition);
+            margin-bottom: 0.25rem;
+        }
+
+        .mode-tab:hover {
+            color: var(--primary-color);
+            background-color: var(--light-color);
+        }
+
+        .mode-tab.active {
+            color: var(--primary-color);
+            background-color: white;
+            font-weight: 600;
+        }
+
+        .mode-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
+        }
+
+        /* Mode content panels - Classic Card Design */
+        .mode-content {
+            display: none;
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            border: 1px solid var(--medium-color);
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .mode-content.active {
+            display: block;
+        }
+
+        /* Section Headers */
+        .mode-content h2 {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--medium-light);
+            font-weight: 600;
+        }
+
+        /* Camera and preview area - Classic Frame */
+        .camera-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .camera-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            margin-bottom: 0.5rem;
+            border: 2px solid var(--primary-color);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        #video, #cameraPreview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #canvas, #ocrCanvas {
+            display: none;
+        }
+
+        .scanning-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--success-color), transparent);
+            top: 30%;
+            animation: scan 2s infinite ease-in-out;
+            box-shadow: 0 0 15px rgba(39, 174, 96, 0.7);
+        }
+
+        @keyframes scan {
+            0% { top: 30%; opacity: 0.7; }
+            50% { top: 70%; opacity: 1; }
+            100% { top: 30%; opacity: 0.7; }
+        }
+
+        /* Control buttons - Classic Style */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.85rem 1.75rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            min-width: 160px;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.5px;
+            text-transform: none;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #34495E 100%);
+            color: white;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(44, 62, 80, 0.2);
+        }
+
+        .btn-secondary {
+            background-color: white;
+            color: var(--text-dark);
+            border: 1px solid var(--medium-color);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--light-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color) 0%, #2ECC71 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger-color) 0%, #E74C3C 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning-color) 0%, #F1C40F 100%);
+            color: white;
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn:disabled:hover::before {
+            width: 0;
+            height: 0;
+        }
+
+        .btn-icon {
+            font-size: 1.2rem;
+        }
+
+        /* OCR sub-options */
+        .ocr-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .ocr-option-btn {
+            min-height: 120px;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 2rem 1.5rem;
+            border-radius: var(--border-radius);
+            background: white;
+            border: 2px solid var(--medium-light);
+            transition: var(--transition);
+        }
+
+        .ocr-option-btn:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .ocr-option-btn .btn-icon {
+            font-size: 2rem;
+        }
+
+        /* Instructions - Classic Note Style */
+        .instructions {
+            background-color: var(--light-color);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.25rem;
+            border-radius: var(--border-radius-sm);
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+            position: relative;
+            color: var(--text-dark);
+        }
+
+        .instructions::before {
+            content: '💡';
+            position: absolute;
+            left: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--primary-color);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        /* File upload button wrapper */
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .file-input-wrapper .btn {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+        }
+
+        /* Manual search textarea */
+        .manual-input {
+            width: 100%;
+            margin: 1.5rem 0;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 180px;
+            padding: 1.25rem;
+            border: 1px solid var(--medium-color);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            resize: vertical;
+            transition: var(--transition);
+            background: white;
+            font-family: inherit;
+            line-height: 1.6;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
+        }
+
+        /* Results display - Classic Panel */
+        .results-section {
+            display: none;
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-top: 2rem;
+            border: 1px solid var(--medium-color);
+            animation: fadeIn 0.4s ease;
+        }
+
+        .results-section.active {
+            display: block;
+        }
+
+        .status-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--light-color) 0%, white 100%);
+            border: 1px solid var(--medium-light);
+        }
+
+        .status-display::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            z-index: 1;
+        }
+
+        .status-halal {
+            color: var(--success-color);
+            border-color: var(--success-color);
+        }
+
+        .status-halal::before {
+            background: linear-gradient(90deg, var(--success-color), #2ECC71);
+        }
+
+        .status-haram {
+            color: var(--danger-color);
+            border-color: var(--danger-color);
+        }
+
+        .status-haram::before {
+            background: linear-gradient(90deg, var(--danger-color), #E74C3C);
+        }
+
+        .status-mushbooh {
+            color: var(--warning-color);
+            border-color: var(--warning-color);
+        }
+
+        .status-mushbooh::before {
+            background: linear-gradient(90deg, var(--warning-color), #F1C40F);
+        }
+
+        .status-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+
+        .status-text {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+
+        .status-subtext {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        .product-info {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--light-color);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--medium-light);
+        }
+
+        .product-name {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--primary-color);
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--medium-light);
+        }
+
+        .ingredients-list {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 1rem;
+            border: 1px solid var(--medium-light);
+        }
+
+        .ingredient-item {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid var(--medium-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .ingredient-item:last-child {
+            border-bottom: none;
+        }
+
+        .ingredient-item:hover {
+            background-color: var(--light-color);
+        }
+
+        .ingredient-haram {
+            background: linear-gradient(135deg, rgba(192, 57, 43, 0.05) 0%, transparent 100%);
+            color: var(--danger-color);
+            font-weight: 500;
+            border-left: 3px solid var(--danger-color);
+        }
+
+        .ingredient-mushbooh {
+            background: linear-gradient(135deg, rgba(243, 156, 18, 0.05) 0%, transparent 100%);
+            color: var(--warning-color);
+            font-weight: 500;
+            border-left: 3px solid var(--warning-color);
+        }
+
+        .match-type {
+            font-size: 0.75rem;
+            background-color: rgba(0, 0, 0, 0.08);
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            margin-left: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* History section - Classic Timeline Style */
+        .history-section {
+            margin-top: 2.5rem;
+            padding-top: 2rem;
+            border-top: 2px solid var(--medium-light);
+        }
+
+        .history-title {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--medium-light);
+        }
+
+        .history-items {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        /* Custom scrollbar */
+        .history-items::-webkit-scrollbar,
+        .ingredients-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .history-items::-webkit-scrollbar-track,
+        .ingredients-list::-webkit-scrollbar-track {
+            background: var(--light-color);
+            border-radius: 3px;
+        }
+
+        .history-items::-webkit-scrollbar-thumb,
+        .ingredients-list::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 3px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem;
+            background-color: white;
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--primary-color);
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--medium-light);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .history-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: var(--primary-color);
+            transition: var(--transition);
+        }
+
+        .history-item:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .history-item.haram::before {
+            background: var(--danger-color);
+        }
+
+        .history-item.mushbooh::before {
+            background: var(--warning-color);
+        }
+
+        .history-product {
+            font-weight: 500;
+            flex: 1;
+            margin-right: 1.5rem;
+            color: var(--text-dark);
+        }
+
+        .history-status {
+            padding: 0.5rem 1.25rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            background: var(--light-color);
+            color: var(--text-dark);
+            border: 1px solid var(--medium-light);
+        }
+
+        .history-item.halal .history-status {
+            background: linear-gradient(135deg, rgba(39, 174, 96, 0.1) 0%, transparent 100%);
+            color: var(--success-color);
+            border-color: var(--success-color);
+        }
+
+        .history-item.haram .history-status {
+            background: linear-gradient(135deg, rgba(192, 57, 43, 0.1) 0%, transparent 100%);
+            color: var(--danger-color);
+            border-color: var(--danger-color);
+        }
+
+        .history-item.mushbooh .history-status {
+            background: linear-gradient(135deg, rgba(243, 156, 18, 0.1) 0%, transparent 100%);
+            color: var(--warning-color);
+            border-color: var(--warning-color);
+        }
+
+        /* Error and loading messages */
+        .message {
+            padding: 1.25rem;
+            border-radius: var(--border-radius);
+            text-align: center;
+            margin: 1.5rem 0;
+            font-weight: 500;
+            animation: fadeIn 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .error {
+            background: linear-gradient(135deg, rgba(192, 57, 43, 0.05) 0%, transparent 100%);
+            color: var(--danger-color);
+            border-color: rgba(192, 57, 43, 0.2);
+        }
+
+        .warning {
+            background: linear-gradient(135deg, rgba(243, 156, 18, 0.05) 0%, transparent 100%);
+            color: var(--warning-color);
+            border-color: rgba(243, 156, 18, 0.2);
+        }
+
+        .success {
+            background: linear-gradient(135deg, rgba(39, 174, 96, 0.05) 0%, transparent 100%);
+            color: var(--success-color);
+            border-color: rgba(39, 174, 96, 0.2);
+        }
+
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem;
+            gap: 1.5rem;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--light-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Footer - Classic Elegant */
+        footer {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1A252F 100%);
+            color: var(--text-white);
+            text-align: center;
+            padding: 2rem 1rem;
+            margin-top: 3rem;
+            border-top: 4px solid var(--secondary-color);
+            position: relative;
+        }
+
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        }
+
+        .footer-text {
+            font-size: 0.95rem;
+            opacity: 0.85;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .footer-text + .footer-text {
+            margin-top: 0.75rem;
+        }
+
+        /* Accessibility improvements */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .mode-tab {
+                padding: 1rem 0.25rem;
+                min-height: 70px;
+                font-size: 0.9rem;
+            }
+            
+            .mode-tab .tab-icon {
+                font-size: 1.25rem;
+            }
+            
+            .mode-content {
+                padding: 1.5rem;
+            }
+            
+            .camera-container {
+                aspect-ratio: 4/3;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .ocr-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .history-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+            
+            .history-status {
+                align-self: flex-start;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .status-text {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .mode-tab {
+                padding: 0.85rem 0.15rem;
+                font-size: 0.85rem;
+                min-height: 65px;
+            }
+            
+            .mode-content {
+                padding: 1.25rem;
+            }
+            
+            .btn {
+                padding: 0.75rem 1.5rem;
+                min-width: auto;
+            }
+            
+            .status-display {
+                padding: 1.75rem;
+            }
+            
+            .status-icon {
+                font-size: 2.5rem;
+            }
+        }
+
+        /* Tablet landscape and desktop */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .container {
+                padding: 1.5rem;
+            }
+            
+            .ocr-options {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Large desktop */
+        @media (min-width: 1200px) {
+            .container {
+                padding: 2rem;
+            }
+            
+            .camera-container {
+                max-height: 500px;
+            }
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary-color: #3498DB;
+                --secondary-color: #9B59B6;
+                --light-color: #1A252F;
+                --medium-light: #2C3E50;
+                --medium-color: #34495E;
+                --text-dark: #ECF0F1;
+                --text-light: #BDC3C7;
+                --text-white: #ECF0F1;
+            }
+            
+            body {
+                background: linear-gradient(135deg, #0D1B2A 0%, #1B263B 100%);
+                color: var(--text-dark);
+            }
+            
+            .mode-content,
+            .results-section,
+            .history-item {
+                background-color: #2C3E50;
+                border-color: var(--medium-color);
+            }
+            
+            .ingredients-list {
+                background-color: #1A252F;
+                border-color: var(--medium-color);
+            }
+            
+            .btn-secondary {
+                background-color: #2C3E50;
+                color: var(--text-dark);
+                border-color: var(--medium-color);
+            }
+            
+            textarea {
+                background-color: #1A252F;
+                border-color: var(--medium-color);
+                color: var(--text-dark);
+            }
+            
+            .instructions {
+                background-color: #34495E;
+            }
+            
+            .product-info {
+                background-color: #1A252F;
+                border-color: var(--medium-color);
+            }
+        }
+
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+      
+      /* Add to your existing CSS, anywhere in the <style> section */
+.btn-loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: button-spin 1s linear infinite;
+}
+
+@keyframes button-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Add specific loading styles for different button types */
+.btn-primary.btn-loading::after {
+    border-top-color: white;
+}
+
+.btn-secondary.btn-loading::after {
+    border-top-color: var(--primary-color);
+}
+
+.btn-success.btn-loading::after {
+    border-top-color: white;
+}
+
+.results-section {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.results-section.hiding {
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.tab-switch-animation {
+    animation: tabSwitch 0.3s ease;
+}
+
+@keyframes tabSwitch {
+    0% { opacity: 0.5; transform: translateX(-10px); }
+    100% { opacity: 1; transform: translateX(0); }
+}
+      
+/* Add to your existing CSS */
+#capturePhotoBtn {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+#capturePhotoBtn:disabled {
+    animation: none;
+    opacity: 0.7;
+}
+
+/* Better mobile button sizing */
+@media (max-width: 768px) {
+    #capturePhotoBtn {
+        padding: 12px;
+        font-size: 1em;
+    }
+}
+    </style>
+</head>
+<body>
+    <!-- Header with app title and subtitle -->
+    <header>
+        <h1>🕌 Halal Scanner</h1>
+        <p class="subtitle">Verify food products for Halal compliance using barcode scanning, OCR, and manual ingredient analysis</p>
+    </header>
+
+    <!-- Main container for all content -->
+    <main class="container">
+        <!-- Mode selection tabs -->
+        <nav class="mode-tabs" role="tablist" aria-label="Scanning modes">
+            <button class="mode-tab active" id="barcodeTab" role="tab" aria-selected="true" aria-controls="barcodePanel">
+                <span class="tab-icon">📦</span>
+                <span>Barcode Scan</span>
+            </button>
+            <button class="mode-tab" id="ocrTab" role="tab" aria-selected="false" aria-controls="ocrPanel">
+                <span class="tab-icon">📝</span>
+                <span>Ingredient OCR</span>
+            </button>
+            <button class="mode-tab" id="manualTab" role="tab" aria-selected="false" aria-controls="manualPanel">
+                <span class="tab-icon">🔍</span>
+                <span>Manual Search</span>
+            </button>
+        </nav>
+
+        <!-- Barcode scanning panel -->
+        <section id="barcodePanel" class="mode-content active" role="tabpanel" aria-labelledby="barcodeTab">
+            <h2>Barcode Scanner</h2>
+            <div class="camera-section">
+                <div class="camera-container">
+                    <!-- Video element for camera stream -->
+                    <video id="video" playsinline aria-label="Camera preview for barcode scanning"></video>
+                    <!-- Canvas for capturing frames -->
+                    <canvas id="canvas" style="display: none;"></canvas>
+                    <!-- Scanning overlay animation -->
+                    <div class="scanning-overlay" id="scanOverlay" style="display: none;" aria-hidden="true">
+                        <div class="scan-line"></div>
+                    </div>
+                </div>
+                
+                <div class="instructions">
+                    <p><strong>Instructions:</strong> Point your camera at a product barcode (UPC, EAN, QR). Ensure good lighting and hold steady. The scan will happen automatically.</p>
+                </div>
+                
+                <div class="controls">
+                    <button id="startBarcodeScan" class="btn btn-primary">
+                        <span class="btn-icon">📷</span> Start Barcode Scan
+                    </button>
+                    <button id="stopBarcodeScan" class="btn btn-secondary" disabled>
+                        <span class="btn-icon">⏹️</span> Stop Camera
+                    </button>
+                    <button id="manualBarcodeInput" class="btn btn-secondary">
+                        <span class="btn-icon">⌨️</span> Enter Barcode
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- OCR scanning panel -->
+        <section id="ocrPanel" class="mode-content" role="tabpanel" aria-labelledby="ocrTab">
+            <h2>Ingredient OCR Scanner</h2>
+            <div class="camera-section">
+                <div class="camera-container">
+                    <!-- Video preview for camera -->
+                    <video id="cameraPreview" playsinline aria-label="Camera preview for ingredient scanning"></video>
+                    <!-- Canvas for capturing images -->
+                    <canvas id="ocrCanvas" style="display: none;"></canvas>
+                    <!-- Preview for uploaded/gallery images -->
+                    <div id="imagePreview" style="display: none; width: 100%; height: 100%; background-size: contain; background-position: center; background-repeat: no-repeat;" aria-label="Preview of selected image"></div>
+                </div>
+                
+                <div class="instructions">
+                    <p><strong>Instructions:</strong> Choose an option below. For best OCR results, ensure good lighting and position the ingredient list clearly in frame.</p>
+                </div>
+                
+                <!-- OCR mode selection buttons -->
+                <div class="ocr-options">
+                    <button id="takePhotoBtn" class="btn ocr-option-btn">
+                        <span class="btn-icon">📷</span>
+                        <span>Take Photo</span>
+                    </button>
+                    <div class="file-input-wrapper">
+                        <!-- Hidden file input that will be triggered by the "From Gallery" button -->
+                        <input type="file" id="imageUpload" accept="image/*" aria-label="Select image from gallery">
+                        <button id="uploadPhotoBtn" class="btn ocr-option-btn">
+                            <span class="btn-icon">🖼️</span>
+                            <span>From Gallery</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- In the OCR panel controls section, add this button -->
+				<div class="controls">
+				<button id="startOCR" class="btn btn-primary" disabled>
+					<span class="btn-icon">🔍</span> Analyze Ingredients
+				</button>
+				<button id="resetOCR" class="btn btn-secondary">
+					<span class="btn-icon">🔄</span> Reset Camera
+				</button>
+				<button id="clearAllResults" class="btn btn-warning">
+					<span class="btn-icon">🗑️</span> Clear Results
+				</button>
+				</div>
+            </div>
+        </section>
+
+        <!-- Manual search panel -->
+        <section id="manualPanel" class="mode-content" role="tabpanel" aria-labelledby="manualTab">
+            <h2>Manual Ingredient Check</h2>
+            <div class="manual-input">
+                <p>Type or paste ingredients (comma-separated or one per line):</p>
+                <textarea id="manualIngredients" placeholder="e.g., water, sugar, gelatin, E120, natural flavors..." rows="8" aria-label="Enter ingredients to check"></textarea>
+                
+                <div class="controls">
+                    <button id="checkIngredients" class="btn btn-primary">
+                        <span class="btn-icon">✅</span> Check Halal Status
+                    </button>
+                    <button id="clearManual" class="btn btn-secondary">
+                        <span class="btn-icon">🗑️</span> Clear
+                    </button>
+                </div>
+                
+                <div class="instructions">
+                    <p><strong>Tip:</strong> You can copy and paste ingredient lists from websites or product packaging. The scanner will check each ingredient against the Haram database.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results display section (shared across all modes) -->
+        <section id="resultsSection" class="results-section" aria-labelledby="resultsTitle">
+            <div id="statusDisplay" class="status-display">
+                <!-- Status will be filled dynamically -->
+            </div>
+            
+            <div class="product-info">
+                <h3 id="productName">Product Name</h3>
+                <p id="productBrand">Brand: Not specified</p>
+                
+                <h4>Ingredients Analysis:</h4>
+                <div id="ingredientsList" class="ingredients-list">
+                    <!-- Ingredients will be listed here -->
+                </div>
+                
+                <div id="resultExplanation" class="message">
+                    <!-- Explanation will be added here -->
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="newScan" class="btn btn-primary">
+                    <span class="btn-icon">🔄</span> New Scan
+                </button>
+                <button id="saveResult" class="btn btn-secondary">
+                    <span class="btn-icon">💾</span> Save to History
+                </button>
+            </div>
+        </section>
+
+        <!-- History section -->
+        <section class="history-section">
+            <div class="history-title">
+                <h3>Scan History</h3>
+                <button id="clearHistory" class="btn btn-secondary" style="padding: 0.5rem 1.25rem; font-size: 0.9rem;">
+                    Clear History
+                </button>
+            </div>
+            <div id="historyItems" class="history-items">
+                <!-- History items will be loaded here -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p class="footer-text">Halal Scanner v2.0 • All processing happens locally in your browser • No data is collected or stored externally</p>
+        <p class="footer-text">This tool provides guidance only. When in doubt, consult with knowledgeable scholars.</p>
+    </footer>
+
+    <!-- Main JavaScript code -->
+   <script>
+    // ============================================
+    // 1. GLOBAL VARIABLES AND STATE
+    // ============================================
+    const video = document.getElementById('video');
+    const cameraPreview = document.getElementById('cameraPreview');
+    const startBarcodeScanBtn = document.getElementById('startBarcodeScan');
+    const stopBarcodeScanBtn = document.getElementById('stopBarcodeScan');
+    const takePhotoBtn = document.getElementById('takePhotoBtn');
+    const startOCRBtn = document.getElementById('startOCR');
+    const imagePreview = document.getElementById('imagePreview');
+    const imageUpload = document.getElementById('imageUpload');
+    const scanOverlay = document.getElementById('scanOverlay');
+    
+    let currentMode = 'barcode';
+    let lastScanMode = null;
+    let currentStream = null;
+    let barcodeScanner = null;
+    let ocrImageData = null;
+    let isOCRCameraReady = false;
+    let barcodeDetectionActive = false;
+
+    // ============================================
+    // 2. UTILITY FUNCTIONS
+    // ============================================
+    
+    function showMessage(text, type) {
+        const existingMessage = document.querySelector('.message:not(#resultExplanation)');
+        if (existingMessage) existingMessage.remove();
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${type}`;
+        messageDiv.textContent = text;
+
+        const currentPanel = document.querySelector('.mode-content.active');
+        if (currentPanel) currentPanel.appendChild(messageDiv);
+
+        if (type === 'success') {
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.style.opacity = '0';
+                    setTimeout(() => messageDiv.remove(), 300);
+                }
+            }, 5000);
+        }
+    }
+    
+    function clearResultsOnTabSwitch() {
+        const resultsSection = document.getElementById('resultsSection');
+        resultsSection.classList.remove('active');
+        
+        const statusDisplay = document.getElementById('statusDisplay');
+        statusDisplay.className = 'status-display';
+        statusDisplay.innerHTML = `
+            <div class="status-icon">📱</div>
+            <div class="status-text">Halal Scanner</div>
+            <div class="status-subtext">Select a mode above to start scanning</div>
+        `;
+        
+        document.getElementById('productName').textContent = 'Product Name';
+        document.getElementById('ingredientsList').innerHTML = `
+            <div class="ingredient-item">No scan results yet</div>
+        `;
+        
+        const explanation = document.getElementById('resultExplanation');
+        explanation.textContent = 'Scan results will appear here.';
+        explanation.className = 'message';
+        
+        lastScanMode = null;
+    }
+    
+    function clearAllResults() {
+        clearResultsOnTabSwitch();
+        alert('All results cleared');
+    }
+
+    // ============================================
+    // 3. CAMERA FUNCTIONS
+    // ============================================
+    
+    async function startBarcodeCamera() {
+        console.log('Starting barcode camera...');
+        startBarcodeScanBtn.disabled = true;
+        startBarcodeScanBtn.innerHTML = '<span class="btn-icon">📷</span> Starting Camera...';
+        
+        try {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+            
+            const constraints = {
+                video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+                audio: false
+            };
+            
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            currentStream = stream;
+            video.srcObject = stream;
+            
+            await new Promise((resolve) => {
+                video.onloadedmetadata = () => {
+                    console.log('Video metadata loaded');
+                    resolve();
+                };
+                setTimeout(resolve, 1000);
+            });
+            
+            startBarcodeDetection();
+            scanOverlay.style.display = 'block';
+            startBarcodeScanBtn.innerHTML = '<span class="btn-icon">🔍</span> Scanning...';
+            stopBarcodeScanBtn.disabled = false;
+            
+        } catch (error) {
+            console.error('Barcode camera error:', error);
+            let msg = error.name === 'NotAllowedError' ? 
+                'Camera permission denied. Please allow camera access.' : 
+                'Camera error: ' + error.message;
+            alert(msg);
+            startBarcodeScanBtn.disabled = false;
+            startBarcodeScanBtn.innerHTML = '<span class="btn-icon">📷</span> Start Barcode Scan';
+        }
+    }
+    
+    async function startOCRCamera() {
+        console.log('Starting OCR camera...');
+        takePhotoBtn.disabled = true;
+        takePhotoBtn.innerHTML = '<span class="btn-icon">📷</span> Starting Camera...';
+        
+        try {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+            
+            const constraints = {
+                video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+                audio: false
+            };
+            
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            currentStream = stream;
+            cameraPreview.srcObject = stream;
+            
+            await cameraPreview.play();
+            
+            isOCRCameraReady = true;
+            takePhotoBtn.innerHTML = '<span class="btn-icon">📷</span> Camera Ready';
+            takePhotoBtn.disabled = false;
+            
+            // Add capture button
+            addCaptureButton();
+            
+        } catch (error) {
+            console.error('OCR camera error:', error);
+            let msg = error.name === 'NotAllowedError' ? 
+                'Camera permission denied. Please allow camera access.' : 
+                'Camera error: ' + error.message;
+            alert(msg);
+            takePhotoBtn.disabled = false;
+            takePhotoBtn.innerHTML = '<span class="btn-icon">📷</span> Take Photo';
+        }
+    }
+    
+    function addCaptureButton() {
+        const existingBtn = document.getElementById('capturePhotoBtn');
+        if (existingBtn) existingBtn.remove();
+        
+        const capturePhotoBtn = document.createElement('button');
+        capturePhotoBtn.id = 'capturePhotoBtn';
+        capturePhotoBtn.className = 'btn btn-success';
+        capturePhotoBtn.innerHTML = '<span class="btn-icon">⭕</span> CAPTURE PHOTO';
+        capturePhotoBtn.style.cssText = 'margin-top: 15px; padding: 15px; font-size: 1.1em; width: 100%;';
+        
+        takePhotoBtn.parentNode.insertBefore(capturePhotoBtn, takePhotoBtn.nextSibling);
+        
+        // FIXED: Enable the capture button with proper click handler
+        capturePhotoBtn.addEventListener('click', capturePhoto);
+        capturePhotoBtn.disabled = false;
+    }
+    
+    function capturePhoto() {
+        if (!currentStream || !isOCRCameraReady) {
+            alert('Camera not ready.');
+            return;
+        }
+        
+        console.log('Capturing photo...');
+        
+        let canvas = document.getElementById('ocrCanvas');
+        if (!canvas) {
+            canvas = document.createElement('canvas');
+            canvas.id = 'ocrCanvas';
+            canvas.style.display = 'none';
+            document.body.appendChild(canvas);
+        }
+        
+        canvas.width = cameraPreview.videoWidth;
+        canvas.height = cameraPreview.videoHeight;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(cameraPreview, 0, 0, canvas.width, canvas.height);
+        
+        ocrImageData = canvas.toDataURL('image/jpeg', 0.8);
+        
+        imagePreview.style.backgroundImage = `url(${ocrImageData})`;
+        imagePreview.style.display = 'block';
+        cameraPreview.style.display = 'none';
+        
+        // Enable analyze button
+        startOCRBtn.disabled = false;
+        
+        // Update UI - FIXED: Capture button remains enabled for retake
+        const captureBtn = document.getElementById('capturePhotoBtn');
+        if (captureBtn) {
+            captureBtn.innerHTML = '<span class="btn-icon">✅</span> Photo Captured!';
+            captureBtn.disabled = false; // KEEP ENABLED for retake
+        }
+        
+        takePhotoBtn.innerHTML = '<span class="btn-icon">🔄</span> Retake';
+        takePhotoBtn.disabled = false;
+        
+        console.log('Photo captured');
+    }
+    
+    function stopCamera() {
+        if (currentStream) {
+            currentStream.getTracks().forEach(track => track.stop());
+            currentStream = null;
+        }
+        
+        video.srcObject = null;
+        cameraPreview.srcObject = null;
+        scanOverlay.style.display = 'none';
+        isOCRCameraReady = false;
+        barcodeDetectionActive = false;
+        
+        if (barcodeScanner) {
+            barcodeScanner.reset();
+        }
+        
+        startBarcodeScanBtn.disabled = false;
+        startBarcodeScanBtn.innerHTML = '<span class="btn-icon">📷</span> Start Barcode Scan';
+        stopBarcodeScanBtn.disabled = true;
+        
+        takePhotoBtn.disabled = false;
+        takePhotoBtn.innerHTML = '<span class="btn-icon">📷</span> Take Photo';
+        
+        const captureBtn = document.getElementById('capturePhotoBtn');
+        if (captureBtn) captureBtn.remove();
+    }
+    
+    function resetOCR() {
+        imagePreview.style.display = 'none';
+        cameraPreview.style.display = 'block';
+        startOCRBtn.disabled = true;
+        startOCRBtn.innerHTML = '<span class="btn-icon">🔍</span> Analyze Ingredients';
+        ocrImageData = null;
+        imageUpload.value = '';
+        isOCRCameraReady = false;
+        
+        const captureBtn = document.getElementById('capturePhotoBtn');
+        if (captureBtn) captureBtn.remove();
+        
+        takePhotoBtn.disabled = false;
+        takePhotoBtn.innerHTML = '<span class="btn-icon">📷</span> Take Photo';
+        
+        // Clear results if from OCR
+        if (lastScanMode === 'ocr' || currentMode === 'ocr') {
+            clearResultsOnTabSwitch();
+        }
+        
+        stopCamera();
+    }
+
+    // ============================================
+    // 4. BARCODE SCANNING
+    // ============================================
+    
+    function initBarcodeScanner() {
+        try {
+            const { BrowserMultiFormatReader } = window.ZXing;
+            barcodeScanner = new BrowserMultiFormatReader();
+            console.log('Barcode scanner ready');
+        } catch (error) {
+            console.error('Barcode scanner init failed:', error);
+        }
+    }
+    
+    function startBarcodeDetection() {
+        if (!barcodeScanner) return;
+        
+        console.log('Starting barcode detection...');
+        barcodeDetectionActive = true;
+        
+        barcodeScanner.decodeFromVideoDevice(null, video, (result, error) => {
+            if (!barcodeDetectionActive) return;
+            
+            if (result) {
+                console.log('Barcode detected:', result.text);
+                barcodeDetectionActive = false;
+                stopCamera();
+                fetchProductData(result.text);
+            }
+            
+            if (error && !error.message.includes('NotFoundException')) {
+                console.warn('Barcode scan warning:', error);
+            }
+        });
+    }
+    
+    async function fetchProductData(barcode) {
+        const statusDisplay = document.getElementById('statusDisplay');
+        statusDisplay.innerHTML = `
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <p>Looking up product information...</p>
+            </div>
+        `;
+        
+        document.getElementById('resultsSection').classList.add('active');
+        
+        try {
+            const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+            const data = await response.json();
+            
+            if (data.status === 1 && data.product) {
+                analyzeProductIngredients(data.product);
+            } else {
+                showResult('Product Not Found', 'unknown', 
+                    `Barcode: ${barcode}\nProduct not found in database.`);
+            }
+        } catch (error) {
+            showResult('Network Error', 'unknown', 
+                `Failed to fetch product data. Please check connection.\nBarcode: ${barcode}`);
+        }
+    }
+
+    // ============================================
+    // 5. OCR ANALYSIS
+    // ============================================
+    
+    function handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        if (!file.type.match('image.*')) {
+            alert('Please select an image file (JPEG, PNG, etc.)');
+            return;
+        }
+        
+        startOCRBtn.disabled = true;
+        startOCRBtn.innerHTML = '<span class="btn-icon">⏳</span> Loading Image...';
+        
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            ocrImageData = e.target.result;
+            
+            console.log('Image loaded from gallery');
+            
+            imagePreview.style.backgroundImage = `url(${ocrImageData})`;
+            imagePreview.style.display = 'block';
+            cameraPreview.style.display = 'none';
+            
+            const captureBtn = document.getElementById('capturePhotoBtn');
+            if (captureBtn) captureBtn.remove();
+            
+            takePhotoBtn.innerHTML = '<span class="btn-icon">🖼️</span> Image Loaded';
+            startOCRBtn.disabled = false;
+            startOCRBtn.innerHTML = '<span class="btn-icon">🔍</span> Analyze Ingredients';
+            
+            showMessage('Image loaded successfully.', 'success');
+        };
+        
+        reader.onerror = function() {
+            alert('Failed to read image file.');
+            startOCRBtn.disabled = false;
+            startOCRBtn.innerHTML = '<span class="btn-icon">🔍</span> Analyze Ingredients';
+        };
+        
+        reader.readAsDataURL(file);
+    }
+    
+    async function performOCR() {
+        if (!ocrImageData) {
+            alert('No image to analyze.');
+            return;
+        }
+        
+        startOCRBtn.disabled = true;
+        startOCRBtn.innerHTML = '<span class="btn-icon">⏳</span> Analyzing...';
+        
+        const statusDisplay = document.getElementById('statusDisplay');
+        statusDisplay.innerHTML = `
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <p>Processing image with OCR...</p>
+            </div>
+        `;
+        
+        document.getElementById('resultsSection').classList.add('active');
+        
+        try {
+            const worker = await Tesseract.createWorker('eng');
+            
+            await worker.setParameters({
+                tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
+                tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789,.;()-: ',
+                preserve_interword_spaces: '1'
+            });
+            
+            const { data: { text } } = await worker.recognize(ocrImageData);
+            await worker.terminate();
+            
+            console.log('OCR extracted:', text);
+            
+            if (!text || text.trim().length < 10) {
+                showResult('OCR Scan Failed', 'unknown',
+                    'Could not read text from image. Ensure good lighting and clear focus.');
+            } else {
+                analyzeIngredients(text);
+            }
+            
+        } catch (error) {
+            console.error('OCR error:', error);
+            showResult('OCR Error', 'unknown',
+                'OCR processing failed. Try a clearer image.');
+        }
+        
+        startOCRBtn.disabled = false;
+        startOCRBtn.innerHTML = '<span class="btn-icon">🔍</span> Analyze Ingredients';
+    }
+
+    // ============================================
+    // 6. INGREDIENT DATABASE & ANALYSIS
+    // ============================================
+    
+    const haramDatabase = {
+        haram: [
+            'pork', 'bacon', 'ham', 'lard', 'alcohol', 'ethanol', 'wine', 'beer',
+            'liquor', 'rum', 'whisky', 'brandy', 'blood', 'blood plasma', 'bone meal',
+            'pepsin', 'e542', 'pork fat', 'pig liver', 'enzymes from pig', 'fermented beverages',
+            'ambergris', 'castoreum', 'civet', 'fermented cider', 'hard cider', 'sherry wine', 
+            'soya sauce naturally brewed with alcohol', 'torula yeast grown on liquor', 'bacon bits', 
+            'black pudding', 'blood sausage', 'pig fat', 'cheese with non-halal rennet', 
+            'non-halal tallow', 'vitamins from non-halal', 'pork chops', 'calcium stearate from pig fat'
+        ],
+        mushbooh: [
+            'gelatin', 'gelatine', 'tallow', 'rennet', 'lipase', 'carmine', 'cochineal',
+            'shellac', 'e120', 'e441', 'e904', 'e422', 'e470', 'e471', 'e472', 'e473',
+            'e474', 'e475', 'e476', 'e477', 'e478', 'e479', 'e481', 'e482', 'e483',
+            'e491', 'e492', 'e493', 'e494', 'e495', 'e631', 'e627', 'e634', 'e635',
+            'e920', 'e966', 'e1105', 'vanilla extract', 'wine vinegar', 'balsamic vinegar',
+            'mono and diglycerides', 'lecithin', 'whey', 'casein', 'magnesium stearate',
+            'stearic acid', 'glycerol', 'glycerine', 'collagen', 'elastin', 'keratin',
+            'taurine', 'urea', 'musk', 'ambergris', 'castoreum', 'civet', 'hard cider',
+            'sherry wine', 'soya sauce naturally brewed with alcohol', 'torula yeast grown on liquor',
+            'bacon bits', 'black pudding', 'blood sausage', 'foie gras', 'haggis', 'pate',
+            'e100', 'e101', 'e132', 'e160a', 'e544', 'e556', 'e570', 'e572',
+            'e620', 'e621', 'e622', 'e623', 'e640', 'e924', 'animal fat', 'animal oil', 
+            'animal shortening', 'rennin', 'suet', 'dripping', 'diglyceride', 'mono glycerides',
+            'shortening', 'emulsifiers', 'hormones', 'carmoisine', 'azorubine', 'indigo carmine', 
+            'idigotine', 'alpha-carotene', 'beta-carotene', 'gamma-carotene', 'sucrose esters', 
+            'sucroglycerides', 'polyglycerol esters', 'propylene glycol', 'lactic acid esters',
+            'carrageenan if alcohol', 'casein if non-halal', 'whey protein if non-halal', 
+            'yeast extract if alcohol', 'nucleic acid', 'beef extract', 'chicken extract', 
+            'fish extract', "brewer's yeast", 'malt vinegar'
+        ]
+    };
+    
+    function analyzeProductIngredients(product) {
+        lastScanMode = 'barcode';
+        let ingredientsText = '';
+        
+        if (product.ingredients_text) {
+            ingredientsText = product.ingredients_text;
+        } else if (product.ingredients) {
+            ingredientsText = product.ingredients.map(ing => ing.text).join(', ');
+        }
+        
+        if (!ingredientsText) {
+            ingredientsText = 'Ingredients not specified in product database';
+        }
+        
+        analyzeIngredients(ingredientsText, product.product_name || 'Scanned Product');
+    }
+    
+    function analyzeIngredients(text, productName = 'OCR Scanned Product') {
+        lastScanMode = 'ocr';
+        const lowerText = text.toLowerCase();
+        const foundHaram = [];
+        const foundMushbooh = [];
+        
+        haramDatabase.haram.forEach(ingredient => {
+            if (lowerText.includes(ingredient.toLowerCase())) {
+                foundHaram.push(ingredient);
+            }
+        });
+        
+        haramDatabase.mushbooh.forEach(ingredient => {
+            if (lowerText.includes(ingredient.toLowerCase())) {
+                foundMushbooh.push(ingredient);
+            }
+        });
+        
+        let status = 'halal';
+        let message = 'No Haram or doubtful ingredients detected. Product appears Halal. ✅';
+        
+        if (foundHaram.length > 0) {
+            status = 'haram';
+            message = `CONTAINS HARAM INGREDIENTS: ${foundHaram.join(', ')}. ❌\n\nThis product should be avoided.`;
+        } else if (foundMushbooh.length > 0) {
+            status = 'mushbooh';
+            message = `Contains doubtful ingredients: ${foundMushbooh.join(', ')}. ⚠️\n\nPlease verify the source of these ingredients.`;
+        }
+        
+        showResult(productName, status, text, message);
+        highlightIngredients(foundHaram, foundMushbooh);
+    }
+    
+    function highlightIngredients(haramList, mushboohList) {
+        const ingredientItems = document.querySelectorAll('.ingredient-item');
+        
+        ingredientItems.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            
+            const isHaram = haramList.some(ing => text.includes(ing.toLowerCase()));
+            const isMushbooh = mushboohList.some(ing => text.includes(ing.toLowerCase()));
+            
+            if (isHaram) {
+                item.classList.add('ingredient-haram');
+                item.innerHTML = `${item.textContent} <span class="match-type">HARAM</span>`;
+            } else if (isMushbooh) {
+                item.classList.add('ingredient-mushbooh');
+                item.innerHTML = `${item.textContent} <span class="match-type">MUSHBOOH</span>`;
+            }
+        });
+    }
+
+    // ============================================
+    // 7. RESULTS DISPLAY
+    // ============================================
+    
+    function showResult(productName, status, ingredients, customMessage = null) {
+        const statusDisplay = document.getElementById('statusDisplay');
+        statusDisplay.className = 'status-display';
+        statusDisplay.classList.add(`status-${status}`);
+        
+        let icon = '✅', statusText = 'HALAL - Permissible';
+        if (status === 'haram') {
+            icon = '❌';
+            statusText = 'HARAM - Forbidden';
+        } else if (status === 'mushbooh') {
+            icon = '⚠️';
+            statusText = 'MUSHBOOH - Doubtful';
+        } else if (status === 'unknown') {
+            icon = '❓';
+            statusText = 'UNKNOWN - Cannot Determine';
+        }
+        
+        const message = customMessage || 
+            (status === 'halal' ? 'No Haram ingredients detected.' :
+             status === 'haram' ? 'Contains Haram ingredients. Avoid this product.' :
+             'Contains doubtful ingredients. Verify sources.');
+        
+        statusDisplay.innerHTML = `
+            <div class="status-icon">${icon}</div>
+            <div class="status-text">${statusText}</div>
+            <div class="status-subtext">${message}</div>
+        `;
+        
+        document.getElementById('productName').textContent = productName;
+        
+        const ingredientsList = document.getElementById('ingredientsList');
+        ingredientsList.innerHTML = '';
+        
+        const lines = ingredients.split(/[,;]|\n|\.\s+/);
+        
+        lines.forEach((line, index) => {
+            if (line.trim()) {
+                const div = document.createElement('div');
+                div.className = 'ingredient-item';
+                div.textContent = `${index + 1}. ${line.trim()}`;
+                ingredientsList.appendChild(div);
+            }
+        });
+        
+        const explanation = document.getElementById('resultExplanation');
+        explanation.textContent = message;
+        explanation.className = `message ${status === 'halal' ? 'success' : 
+                               status === 'haram' ? 'error' : 'warning'}`;
+        
+        document.getElementById('resultsSection').classList.add('active');
+        
+        setTimeout(() => {
+            document.getElementById('resultsSection').scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        }, 100);
+    }
+
+    // ============================================
+    // 8. EVENT HANDLERS & INITIALIZATION
+    // ============================================
+    
+    function setupEventListeners() {
+        console.log('Setting up event listeners...');
+        
+        // Barcode
+        startBarcodeScanBtn.addEventListener('click', startBarcodeCamera);
+        stopBarcodeScanBtn.addEventListener('click', stopCamera);
+        
+        document.getElementById('manualBarcodeInput').addEventListener('click', () => {
+            const barcode = prompt('Enter product barcode (UPC/EAN):', '');
+            if (barcode && barcode.trim()) {
+                fetchProductData(barcode.trim());
+            }
+        });
+        
+        // OCR
+        takePhotoBtn.addEventListener('click', startOCRCamera);
+        
+        document.getElementById('uploadPhotoBtn').addEventListener('click', () => {
+            imageUpload.click();
+        });
+        
+        imageUpload.addEventListener('change', handleImageUpload);
+        startOCRBtn.addEventListener('click', performOCR);
+        document.getElementById('resetOCR').addEventListener('click', resetOCR);
+        
+        document.getElementById('clearAllResults').addEventListener('click', clearAllResults);
+        
+        // Manual
+        document.getElementById('checkIngredients').addEventListener('click', () => {
+            const text = document.getElementById('manualIngredients').value;
+            if (text) {
+                analyzeIngredients(text, 'Manual Ingredient Check');
+            } else {
+                alert('Please enter ingredients to check.');
+            }
+        });
+        
+        document.getElementById('clearManual').addEventListener('click', () => {
+            document.getElementById('manualIngredients').value = '';
+        });
+        
+        // Results
+        document.getElementById('newScan').addEventListener('click', () => {
+            document.getElementById('resultsSection').classList.remove('active');
+            stopCamera();
+            resetOCR();
+        });
+        
+        document.getElementById('saveResult').addEventListener('click', () => {
+            alert('Scan saved to history!');
+        });
+        
+        document.getElementById('clearHistory').addEventListener('click', () => {
+            if (confirm('Clear all scan history?')) {
+                alert('History cleared!');
+            }
+        });
+        
+        // Tab switching
+        document.querySelectorAll('.mode-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetId = tab.id.replace('Tab', 'Panel');
+                
+                // Update tabs
+                document.querySelectorAll('.mode-tab').forEach(t => {
+                    t.classList.remove('active');
+                    t.setAttribute('aria-selected', 'false');
+                });
+                tab.classList.add('active');
+                tab.setAttribute('aria-selected', 'true');
+                
+                // Update panels
+                document.querySelectorAll('.mode-content').forEach(panel => {
+                    panel.classList.remove('active');
+                });
+                document.getElementById(targetId).classList.add('active');
+                
+                // Update mode and clear results
+                currentMode = tab.id.replace('Tab', '');
+                clearResultsOnTabSwitch();
+                stopCamera();
+                
+                // Reset OCR if switching to OCR tab
+                if (currentMode === 'ocr') {
+                    resetOCR();
+                }
+            });
+        });
+    }
+    
+    function initializeApp() {
+        console.log('Initializing Halal Scanner...');
+        
+        // Initialize barcode scanner
+        initBarcodeScanner();
+        
+        // Setup event listeners
+        setupEventListeners();
+        
+        // Clean up on page unload
+        window.addEventListener('beforeunload', stopCamera);
+        
+        console.log('Halal Scanner ready!');
+    }
+
+    // ============================================
+    // 9. INITIALIZE APPLICATION
+    // ============================================
+    
+    document.addEventListener('DOMContentLoaded', initializeApp);
+</script>
+</body>
+</html>
