@@ -3,9 +3,8 @@
   
 <head>
     <meta charset="UTF-8">
-    <!--meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Halal Scanner - Check Food Products</title>
+    <title>Scan Halal - Check Food Products</title>
     <!-- PWA manifest for installability -->
     <link rel="manifest" href="manifest.json">
     <!-- Icons for PWA -->
@@ -17,1328 +16,781 @@
     <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
     <style>
         /* Reset and base styles */
-        /* Reset and base styles */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Georgia', 'Times New Roman', Times, serif;
-    -webkit-tap-highlight-color: transparent;
-}
-
-:root {
-    /* Classic Color Palette */
-    --primary-color: #2C3E50;      /* Deep Navy Blue */
-    --secondary-color: #7D3C98;    /* Royal Purple */
-    --accent-color: #D35400;       /* Burnt Orange */
-    --success-color: #27AE60;      /* Forest Green */
-    --danger-color: #C0392B;       /* Crimson Red */
-    --warning-color: #F39C12;      /* Golden Yellow */
-    
-    /* Neutral Colors */
-    --light-color: #F8F9FA;        /* Off White */
-    --medium-light: #E8ECEF;
-    --medium-color: #BDC3C7;       /* Silver Gray */
-    --dark-color: #2C3E50;         /* Navy */
-    --text-dark: #2C3E50;          /* Dark Text */
-    --text-light: #5D6D7E;         /* Medium Gray Text */
-    --text-white: #FFFFFF;         /* White Text */
-    
-    /* UI Elements */
-    --border-radius: 8px;
-    --border-radius-lg: 12px;
-    --border-radius-sm: 4px;
-    --shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-    --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.12);
-    --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.15);
-    --transition: all 0.3s ease;
-}
-
-body {
-    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ed 100%);
-    color: var(--text-dark);
-    line-height: 1.6;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow-x: hidden;
-}
-
-/* Header styles - Classic Elegant */
-header {
-    background: linear-gradient(135deg, var(--primary-color) 0%, #1A252F 100%);
-    color: var(--text-white);
-    padding: 1rem;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    position: relative;
-    border-bottom: 4px solid var(--secondary-color);
-}
-
-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--secondary-color), var(--accent-color), var(--secondary-color));
-}
-
-h1 {
-    font-size: 1.8rem;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-.subtitle {
-    font-size: 0.9rem;
-    opacity: 0.9;
-    font-weight: 300;
-    max-width: 600px;
-    margin: 0 auto;
-    line-height: 1.4;
-}
-
-/* Main content container */
-.container {
-    flex: 1;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1rem;
-    width: 100%;
-}
-
-/* Mode selection tabs - MOBILE OPTIMIZED */
-.mode-tabs {
-    display: flex;
-    background-color: white;
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    margin-bottom: 1.5rem;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--medium-color);
-    position: relative;
-}
-
-.mode-tab {
-    flex: 1;
-    padding: 0.75rem 0.25rem;
-    text-align: center;
-    background-color: transparent;
-    border: none;
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--text-light);
-    cursor: pointer;
-    transition: var(--transition);
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.35rem;
-    min-height: 60px;
-    justify-content: center;
-    border-right: 1px solid var(--medium-light);
-}
-
-.mode-tab:last-child {
-    border-right: none;
-}
-
-.mode-tab .tab-icon {
-    font-size: 1.1rem;
-    transition: var(--transition);
-    margin-bottom: 0.1rem;
-}
-
-.mode-tab:hover {
-    color: var(--primary-color);
-    background-color: var(--light-color);
-}
-
-.mode-tab.active {
-    color: var(--primary-color);
-    background-color: white;
-    font-weight: 600;
-}
-
-.mode-tab.active::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
-}
-
-/* Mode content panels - Classic Card Design */
-.mode-content {
-    display: none;
-    background-color: white;
-    border-radius: var(--border-radius);
-    padding: 1.5rem;
-    box-shadow: var(--shadow);
-    margin-bottom: 1.5rem;
-    border: 1px solid var(--medium-color);
-    animation: fadeIn 0.4s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.mode-content.active {
-    display: block;
-}
-
-/* Section Headers */
-.mode-content h2 {
-    font-size: 1.3rem;
-    color: var(--primary-color);
-    margin-bottom: 1.25rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 2px solid var(--medium-light);
-    font-weight: 600;
-}
-
-/* Camera and preview area - Classic Frame */
-.camera-section {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-}
-
-.camera-container {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16/9;
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    margin-bottom: 0.5rem;
-    border: 2px solid var(--primary-color);
-    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3);
-}
-
-#video, #cameraPreview {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-#canvas, #ocrCanvas {
-    display: none;
-}
-
-.scanning-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 2;
-}
-
-.scan-line {
-    position: absolute;
-    width: 100%;
-    height: 3px;
-    background: linear-gradient(90deg, transparent, var(--success-color), transparent);
-    top: 30%;
-    animation: scan 2s infinite ease-in-out;
-    box-shadow: 0 0 15px rgba(39, 174, 96, 0.7);
-}
-
-@keyframes scan {
-    0% { top: 30%; opacity: 0.7; }
-    50% { top: 70%; opacity: 1; }
-    100% { top: 30%; opacity: 0.7; }
-}
-
-/* Control buttons - MOBILE OPTIMIZED */
-.controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    justify-content: center;
-    margin-bottom: 1.25rem;
-}
-
-.btn {
-    padding: 0.75rem 1.25rem;
-    border: none;
-    border-radius: var(--border-radius);
-    font-size: 0.95rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: var(--transition);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    min-width: 120px;
-    position: relative;
-    overflow: hidden;
-    letter-spacing: 0.3px;
-    text-transform: none;
-    flex: 1;
-    max-width: 100%;
-}
-
-.btn::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
-}
-
-.btn:hover::before {
-    width: 300px;
-    height: 300px;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, var(--primary-color) 0%, #34495E 100%);
-    color: white;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(44, 62, 80, 0.2);
-}
-
-.btn-secondary {
-    background-color: white;
-    color: var(--text-dark);
-    border: 1px solid var(--medium-color);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-}
-
-.btn-secondary:hover {
-    background-color: var(--light-color);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.btn-success {
-    background: linear-gradient(135deg, var(--success-color) 0%, #2ECC71 100%);
-    color: white;
-}
-
-.btn-danger {
-    background: linear-gradient(135deg, var(--danger-color) 0%, #E74C3C 100%);
-    color: white;
-}
-
-.btn-warning {
-    background: linear-gradient(135deg, var(--warning-color) 0%, #F1C40F 100%);
-    color: white;
-}
-
-.btn:active {
-    transform: translateY(0);
-}
-
-.btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-.btn:disabled:hover::before {
-    width: 0;
-    height: 0;
-}
-
-.btn-icon {
-    font-size: 1rem;
-}
-
-/* OCR sub-options */
-.ocr-options {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.25rem;
-}
-
-.ocr-option-btn {
-    min-height: 100px;
-    flex-direction: column;
-    gap: 0.75rem;
-    padding: 1.5rem 1rem;
-    border-radius: var(--border-radius);
-    background: white;
-    border: 2px solid var(--medium-light);
-    transition: var(--transition);
-}
-
-.ocr-option-btn:hover {
-    border-color: var(--primary-color);
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-md);
-}
-
-.ocr-option-btn .btn-icon {
-    font-size: 1.5rem;
-}
-
-/* Instructions - Classic Note Style */
-.instructions {
-    background-color: var(--light-color);
-    border-left: 4px solid var(--primary-color);
-    padding: 1rem;
-    border-radius: var(--border-radius-sm);
-    margin: 1.25rem 0;
-    font-size: 0.9rem;
-    position: relative;
-    color: var(--text-dark);
-}
-
-.instructions::before {
-    content: '💡';
-    position: absolute;
-    left: -15px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: var(--primary-color);
-    color: white;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.9rem;
-}
-
-/* File upload button wrapper */
-.file-input-wrapper {
-    position: relative;
-    display: inline-block;
-    width: 100%;
-}
-
-.file-input-wrapper input[type="file"] {
-    position: absolute;
-    left: 0;
-    top: 0;
-    opacity: 0;
-    width: 100%;
-    height: 100%;
-    cursor: pointer;
-    z-index: 2;
-}
-
-.file-input-wrapper .btn {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-}
-
-/* Manual search textarea */
-.manual-input {
-    width: 100%;
-    margin: 1.25rem 0;
-}
-
-textarea {
-    width: 100%;
-    min-height: 150px;
-    padding: 1rem;
-    border: 1px solid var(--medium-color);
-    border-radius: var(--border-radius);
-    font-size: 0.95rem;
-    resize: vertical;
-    transition: var(--transition);
-    background: white;
-    font-family: inherit;
-    line-height: 1.6;
-}
-
-textarea:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
-}
-
-/* Results display - Classic Panel */
-.results-section {
-    display: none;
-    background-color: white;
-    border-radius: var(--border-radius);
-    padding: 1.5rem;
-    box-shadow: var(--shadow);
-    margin-top: 1.5rem;
-    border: 1px solid var(--medium-color);
-    animation: fadeIn 0.4s ease;
-}
-
-.results-section.active {
-    display: block;
-}
-
-.status-display {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    border-radius: var(--border-radius);
-    margin-bottom: 1.5rem;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(135deg, var(--light-color) 0%, white 100%);
-    border: 1px solid var(--medium-light);
-}
-
-.status-display::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    z-index: 1;
-}
-
-.status-halal {
-    color: var(--success-color);
-    border-color: var(--success-color);
-}
-
-.status-halal::before {
-    background: linear-gradient(90deg, var(--success-color), #2ECC71);
-}
-
-.status-haram {
-    color: var(--danger-color);
-    border-color: var(--danger-color);
-}
-
-.status-haram::before {
-    background: linear-gradient(90deg, var(--danger-color), #E74C3C);
-}
-
-.status-mushbooh {
-    color: var(--warning-color);
-    border-color: var(--warning-color);
-}
-
-.status-mushbooh::before {
-    background: linear-gradient(90deg, var(--warning-color), #F1C40F);
-}
-
-.status-icon {
-    font-size: 2.5rem;
-    margin-bottom: 0.75rem;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-}
-
-.status-text {
-    font-size: 1.4rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    letter-spacing: 0.5px;
-}
-
-.status-subtext {
-    font-size: 1rem;
-    opacity: 0.9;
-    max-width: 600px;
-    line-height: 1.5;
-}
-
-.product-info {
-    margin-bottom: 1.5rem;
-    padding: 1.25rem;
-    background: var(--light-color);
-    border-radius: var(--border-radius);
-    border: 1px solid var(--medium-light);
-}
-
-.product-name {
-    font-size: 1.4rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: var(--primary-color);
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid var(--medium-light);
-}
-
-.ingredients-list {
-    background-color: white;
-    border-radius: var(--border-radius);
-    padding: 1.25rem;
-    max-height: 300px;
-    overflow-y: auto;
-    margin-top: 1rem;
-    border: 1px solid var(--medium-light);
-}
-
-.ingredient-item {
-    padding: 0.75rem;
-    border-bottom: 1px solid var(--medium-light);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: var(--transition);
-    font-size: 0.9rem;
-}
-
-.ingredient-item:last-child {
-    border-bottom: none;
-}
-
-.ingredient-item:hover {
-    background-color: var(--light-color);
-}
-
-.ingredient-haram {
-    background: linear-gradient(135deg, rgba(192, 57, 43, 0.05) 0%, transparent 100%);
-    color: var(--danger-color);
-    font-weight: 500;
-    border-left: 3px solid var(--danger-color);
-}
-
-.ingredient-mushbooh {
-    background: linear-gradient(135deg, rgba(243, 156, 18, 0.05) 0%, transparent 100%);
-    color: var(--warning-color);
-    font-weight: 500;
-    border-left: 3px solid var(--warning-color);
-}
-
-.match-type {
-    font-size: 0.7rem;
-    background-color: rgba(0, 0, 0, 0.08);
-    padding: 0.25rem 0.5rem;
-    border-radius: 15px;
-    margin-left: 0.5rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-}
-
-/* History section - Classic Timeline Style */
-.history-section {
-    margin-top: 2rem;
-    padding-top: 1.5rem;
-    border-top: 2px solid var(--medium-light);
-}
-
-.history-title {
-    font-size: 1.3rem;
-    color: var(--primary-color);
-    margin-bottom: 1.25rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--medium-light);
-}
-
-.history-items {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    max-height: 300px;
-    overflow-y: auto;
-    padding-right: 0.5rem;
-}
-
-/* Custom scrollbar */
-.history-items::-webkit-scrollbar,
-.ingredients-list::-webkit-scrollbar {
-    width: 6px;
-}
-
-.history-items::-webkit-scrollbar-track,
-.ingredients-list::-webkit-scrollbar-track {
-    background: var(--light-color);
-    border-radius: 3px;
-}
-
-.history-items::-webkit-scrollbar-thumb,
-.ingredients-list::-webkit-scrollbar-thumb {
-    background: var(--primary-color);
-    border-radius: 3px;
-}
-
-.history-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    background-color: white;
-    border-radius: var(--border-radius);
-    border-left: 4px solid var(--primary-color);
-    cursor: pointer;
-    transition: var(--transition);
-    box-shadow: var(--shadow);
-    border: 1px solid var(--medium-light);
-    position: relative;
-    overflow: hidden;
-}
-
-.history-item::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 4px;
-    background: var(--primary-color);
-    transition: var(--transition);
-}
-
-.history-item:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-}
-
-.history-item.haram::before {
-    background: var(--danger-color);
-}
-
-.history-item.mushbooh::before {
-    background: var(--warning-color);
-}
-
-.history-product {
-    font-weight: 500;
-    flex: 1;
-    margin-right: 1rem;
-    color: var(--text-dark);
-    font-size: 0.95rem;
-}
-
-.history-status {
-    padding: 0.35rem 1rem;
-    border-radius: 15px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: 0.3px;
-    white-space: nowrap;
-    background: var(--light-color);
-    color: var(--text-dark);
-    border: 1px solid var(--medium-light);
-}
-
-.history-item.halal .history-status {
-    background: linear-gradient(135deg, rgba(39, 174, 96, 0.1) 0%, transparent 100%);
-    color: var(--success-color);
-    border-color: var(--success-color);
-}
-
-.history-item.haram .history-status {
-    background: linear-gradient(135deg, rgba(192, 57, 43, 0.1) 0%, transparent 100%);
-    color: var(--danger-color);
-    border-color: var(--danger-color);
-}
-
-.history-item.mushbooh .history-status {
-    background: linear-gradient(135deg, rgba(243, 156, 18, 0.1) 0%, transparent 100%);
-    color: var(--warning-color);
-    border-color: var(--warning-color);
-}
-
-/* Error and loading messages */
-.message {
-    padding: 1rem;
-    border-radius: var(--border-radius);
-    text-align: center;
-    margin: 1.25rem 0;
-    font-weight: 500;
-    animation: fadeIn 0.3s ease;
-    border: 1px solid transparent;
-    font-size: 0.9rem;
-}
-
-.error {
-    background: linear-gradient(135deg, rgba(192, 57, 43, 0.05) 0%, transparent 100%);
-    color: var(--danger-color);
-    border-color: rgba(192, 57, 43, 0.2);
-}
-
-.warning {
-    background: linear-gradient(135deg, rgba(243, 156, 18, 0.05) 0%, transparent 100%);
-    color: var(--warning-color);
-    border-color: rgba(243, 156, 18, 0.2);
-}
-
-.success {
-    background: linear-gradient(135deg, rgba(39, 174, 96, 0.05) 0%, transparent 100%);
-    color: var(--success-color);
-    border-color: rgba(39, 174, 96, 0.2);
-}
-
-.loading-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    gap: 1.25rem;
-}
-
-.loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid var(--light-color);
-    border-top-color: var(--primary-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* Footer - Classic Elegant */
-footer {
-    background: linear-gradient(135deg, var(--primary-color) 0%, #1A252F 100%);
-    color: var(--text-white);
-    text-align: center;
-    padding: 1.5rem 1rem;
-    margin-top: 2rem;
-    border-top: 4px solid var(--secondary-color);
-    position: relative;
-}
-
-footer::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-}
-
-.footer-text {
-    font-size: 0.85rem;
-    opacity: 0.85;
-    line-height: 1.5;
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.footer-text + .footer-text {
-    margin-top: 0.5rem;
-}
-
-/* Accessibility improvements */
-.sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .container {
-        padding: 0.75rem;
-    }
-    
-    .mode-tab {
-        padding: 0.65rem 0.15rem;
-        min-height: 55px;
-        font-size: 0.8rem;
-    }
-    
-    .mode-tab .tab-icon {
-        font-size: 1rem;
-    }
-    
-    .mode-content {
-        padding: 1.25rem;
-    }
-    
-    .camera-container {
-        aspect-ratio: 4/3;
-    }
-    
-    .controls {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .btn {
-        width: 100%;
-        max-width: 280px;
-        padding: 0.7rem 1rem;
-        font-size: 0.9rem;
-        min-width: auto;
-    }
-    
-    .ocr-options {
-        grid-template-columns: 1fr;
-    }
-    
-    .history-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-        padding: 0.85rem;
-    }
-    
-    .history-status {
-        align-self: flex-start;
-    }
-    
-    h1 {
-        font-size: 1.5rem;
-    }
-    
-    .status-text {
-        font-size: 1.25rem;
-    }
-    
-    .status-icon {
-        font-size: 2rem;
-    }
-    
-    .status-display {
-        padding: 1.5rem;
-    }
-    
-    .product-name {
-        font-size: 1.25rem;
-    }
-    
-    .instructions {
-        font-size: 0.85rem;
-        padding: 0.85rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .mode-tab {
-        padding: 0.6rem 0.1rem;
-        font-size: 0.75rem;
-        min-height: 50px;
-        gap: 0.25rem;
-    }
-    
-    .mode-content {
-        padding: 1rem;
-    }
-    
-    .btn {
-        padding: 0.65rem 0.85rem;
-        font-size: 0.85rem;
-        gap: 0.4rem;
-    }
-    
-    .btn-icon {
-        font-size: 0.9rem;
-    }
-    
-    .status-display {
-        padding: 1.25rem;
-    }
-    
-    .status-icon {
-        font-size: 1.75rem;
-    }
-    
-    .status-text {
-        font-size: 1.1rem;
-    }
-    
-    .ocr-option-btn {
-        min-height: 85px;
-        padding: 1.25rem 0.85rem;
-    }
-    
-    .ocr-option-btn .btn-icon {
-        font-size: 1.25rem;
-    }
-    
-    .product-name {
-        font-size: 1.1rem;
-    }
-    
-    .ingredient-item {
-        padding: 0.65rem;
-        font-size: 0.85rem;
-    }
-    
-    .history-title {
-        font-size: 1.1rem;
-    }
-    
-    .history-product {
-        font-size: 0.85rem;
-    }
-}
-
-/* Tablet landscape and desktop */
-@media (min-width: 769px) and (max-width: 1024px) {
-    .container {
-        padding: 1.25rem;
-    }
-    
-    .ocr-options {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .mode-tab {
-        padding: 0.85rem 0.25rem;
-        min-height: 65px;
-    }
-}
-
-/* Large desktop */
-@media (min-width: 1200px) {
-    .container {
-        padding: 1.5rem;
-    }
-    
-    .camera-container {
-        max-height: 500px;
-    }
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --primary-color: #3498DB;
-        --secondary-color: #9B59B6;
-        --light-color: #1A252F;
-        --medium-light: #2C3E50;
-        --medium-color: #34495E;
-        --text-dark: #ECF0F1;
-        --text-light: #BDC3C7;
-        --text-white: #ECF0F1;
-    }
-    
-    body {
-        background: linear-gradient(135deg, #0D1B2A 0%, #1B263B 100%);
-        color: var(--text-dark);
-    }
-    
-    .mode-content,
-    .results-section,
-    .history-item {
-        background-color: #2C3E50;
-        border-color: var(--medium-color);
-    }
-    
-    .ingredients-list {
-        background-color: #1A252F;
-        border-color: var(--medium-color);
-    }
-    
-    .btn-secondary {
-        background-color: #2C3E50;
-        color: var(--text-dark);
-        border-color: var(--medium-color);
-    }
-    
-    textarea {
-        background-color: #1A252F;
-        border-color: var(--medium-color);
-        color: var(--text-dark);
-    }
-    
-    .instructions {
-        background-color: #34495E;
-    }
-    
-    .product-info {
-        background-color: #1A252F;
-        border-color: var(--medium-color);
-    }
-}
-
-/* Reduced motion */
-@media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-    }
-}
-
-/* Add to your existing CSS, anywhere in the <style> section */
-.btn-loading {
-    position: relative;
-    color: transparent !important;
-}
-
-.btn-loading::after {
-    content: '';
-    position: absolute;
-    width: 18px;
-    height: 18px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top-color: white;
-    border-radius: 50%;
-    animation: button-spin 1s linear infinite;
-}
-
-@keyframes button-spin {
-    to { transform: rotate(360deg); }
-}
-
-/* Add specific loading styles for different button types */
-.btn-primary.btn-loading::after {
-    border-top-color: white;
-}
-
-.btn-secondary.btn-loading::after {
-    border-top-color: var(--primary-color);
-}
-
-.btn-success.btn-loading::after {
-    border-top-color: white;
-}
-
-.results-section {
-    transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.results-section.hiding {
-    opacity: 0;
-    transform: translateY(20px);
-}
-
-.tab-switch-animation {
-    animation: tabSwitch 0.3s ease;
-}
-
-@keyframes tabSwitch {
-    0% { opacity: 0.5; transform: translateX(-10px); }
-    100% { opacity: 1; transform: translateX(0); }
-}
-
-/* Add to your existing CSS */
-#capturePhotoBtn {
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-#capturePhotoBtn:disabled {
-    animation: none;
-    opacity: 0.7;
-}
-
-/* Better mobile button sizing */
-@media (max-width: 768px) {
-    #capturePhotoBtn {
-        padding: 10px;
-        font-size: 0.9em;
-    }
-}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            /* GOLDEN SPARKLING THEME */
+            --primary-gold: #FFD700;      /* Bright Gold */
+            --secondary-gold: #B8860B;    /* Dark Goldenrod */
+            --metallic-gradient: linear-gradient(135deg, #FFD700 0%, #FDB931 50%, #B8860B 100%);
+            
+            /* Dark Background for Contrast */
+            --bg-dark: #0F172A;           /* Deep Slate Blue/Black */
+            --bg-panel: #1E293B;          /* Lighter Slate */
+            
+            --text-white: #FFFFFF;
+            --text-muted: #94A3B8;
+            --text-dark: #1e293b;        /* For text on light buttons */
+            
+            /* UI Elements */
+            --border-radius: 50px;        /* Rounder/Pill shape */
+            --border-radius-sm: 12px;
+            --shadow-glow: 0 0 20px rgba(255, 215, 0, 0.4); /* Golden Glow */
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-white);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            padding-bottom: 20px;
+        }
+
+        /* Header styles - Golden Gradient */
+        header {
+            background: var(--metallic-gradient);
+            color: #3E2723; /* Dark brown text for contrast on gold */
+            padding: 0.75rem;
+            text-align: center;
+            box-shadow: var(--shadow-glow);
+            position: relative;
+            z-index: 10;
+            border-bottom: 2px solid #FFF8E1;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-shadow: 0 1px 1px rgba(255,255,255,0.5);
+        }
+
+        /* Main content container */
+        .container {
+            flex: 1;
+            max-width: 800px; 
+            margin: 0 auto;
+            padding: 0.75rem;
+            width: 100%;
+        }
+
+        /* Mode selection tabs - Glassmorphism Gold */
+        .mode-tabs {
+            display: flex;
+            background-color: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 4px;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow-card);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .mode-tab {
+            flex: 1;
+            padding: 8px 4px; 
+            text-align: center;
+            background-color: transparent;
+            border: none;
+            font-size: 0.75rem; 
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition);
+            border-radius: var(--border-radius);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            min-height: 50px; /* Consistent tab height */
+            justify-content: center;
+        }
+
+        .mode-tab .tab-icon {
+            font-size: 1.1rem;
+        }
+
+        .mode-tab.active {
+            color: #3E2723; /* Dark text */
+            background: var(--primary-gold);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+            font-weight: 800;
+        }
+
+        /* Mode content panels */
+        .mode-content {
+            display: none;
+            background-color: var(--bg-panel);
+            border-radius: var(--border-radius-sm);
+            padding: 1rem;
+            box-shadow: var(--shadow-card);
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .mode-content.active {
+            display: block;
+        }
+
+        h4 {
+            font-size: 1.1rem;
+            color: var(--primary-gold);
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Camera and preview area */
+        .camera-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .camera-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3; 
+            border-radius: var(--border-radius-sm);
+            overflow: hidden;
+            background: #000;
+            border: 2px solid var(--secondary-gold);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        #video, #cameraPreview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #canvas, #ocrCanvas {
+            display: none;
+        }
+
+        .scanning-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: var(--primary-gold);
+            box-shadow: 0 0 15px var(--primary-gold);
+            top: 20%;
+            animation: scan 2s infinite ease-in-out;
+        }
+
+        @keyframes scan {
+            0% { top: 20%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 80%; opacity: 0; }
+        }
+
+        /* Control buttons - UNIFORM SIZE & GOLD THEME */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .btn {
+            /* Sizing Fixes */
+            flex: 1 1 100px; /* Grow, shrink, basis */
+            min-height: 44px; /* Force consistent height */
+            padding: 0 12px;
+            
+            /* Style */
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 0.85rem; 
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Golden Button Style */
+        .btn-primary {
+            background: var(--metallic-gradient);
+            color: #3E2723; /* Dark text for readability */
+            box-shadow: 0 4px 15px rgba(184, 134, 11, 0.4);
+            border: 1px solid #FFD700;
+        }
+        
+        .btn-primary:hover {
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-white);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary-gold);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #EF4444, #DC2626);
+            color: white;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #F59E0B, #D97706);
+            color: white;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            box-shadow: none;
+            transform: none;
+            cursor: not-allowed;
+            filter: grayscale(100%);
+        }
+
+        /* OCR Options - EQUAL SIZES FIXED */
+        .ocr-options {
+            display: grid;
+            /* Force 2 columns of equal width */
+            grid-template-columns: 1fr 1fr; 
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .ocr-option-btn {
+            /* Height Control - Fixed minimum height ensures equality */
+            min-height: 52px; 
+            
+            /* Layout */
+            flex-direction: row; 
+            justify-content: center;
+            align-items: center; /* Center vertically */
+            gap: 8px;
+            
+            /* Style */
+            border-radius: var(--border-radius-sm);
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 215, 0, 0.2);
+            color: var(--text-white);
+            font-size: 0.9rem;
+            width: 100%; /* Ensure full width of grid cell */
+            transition: var(--transition);
+        }
+        
+        .ocr-option-btn:active, .ocr-option-btn:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: var(--primary-gold);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+        }
+
+        /* SVG Icons */
+        .ocr-option-btn svg {
+            width: 22px;
+            height: 22px;
+            color: var(--primary-gold);
+        }
+
+        /* Instructions */
+        .instructions {
+            background-color: rgba(255, 215, 0, 0.05);
+            border-left: 3px solid var(--primary-gold);
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin: 0.75rem 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* File upload wrapper */
+        .file-input-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        /* Textarea */
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius-sm);
+            font-size: 0.9rem;
+            resize: vertical;
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-gold);
+            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
+        }
+
+        /* Results Display */
+        .results-section {
+            display: none;
+            background-color: var(--bg-panel);
+            border-radius: var(--border-radius-sm);
+            padding: 1rem;
+            box-shadow: var(--shadow-card);
+            margin-top: 1rem;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+        }
+
+        .results-section.active {
+            display: block;
+        }
+
+        .status-display {
+            padding: 1.5rem;
+            border-radius: var(--border-radius-sm);
+            text-align: center;
+            margin-bottom: 1rem;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-halal {
+            background: linear-gradient(135deg, #10B981, #059669);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+            border: 1px solid #34D399;
+        }
+        
+        .status-haram {
+            background: linear-gradient(135deg, #EF4444, #DC2626);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+            border: 1px solid #F87171;
+        }
+        
+        .status-mushbooh {
+            background: linear-gradient(135deg, #F59E0B, #D97706);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+            border: 1px solid #FBBF24;
+        }
+
+        .status-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.25rem;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .status-text {
+            font-size: 1.25rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        
+        .status-subtext {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-top: 0.5rem;
+        }
+
+        .product-info h3 {
+            color: var(--primary-gold);
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.5rem;
+        }
+
+        .ingredients-list {
+            max-height: 250px;
+            overflow-y: auto;
+            margin-top: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .ingredient-item {
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            color: #ddd;
+        }
+        
+        .ingredient-item:last-child {
+            border-bottom: none;
+        }
+
+        .ingredient-haram {
+            color: #FCA5A5;
+            background-color: rgba(239, 68, 68, 0.15);
+        }
+
+        .ingredient-mushbooh {
+            color: #FDE68A;
+            background-color: rgba(245, 158, 11, 0.15);
+        }
+
+        .match-type {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* History Section - HIDDEN */
+        .history-section {
+            display: none; 
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 1rem;
+            margin-top: auto;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+        }
+
+        /* Toast Notification Styles */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 90%;
+            max-width: 400px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: rgba(30, 41, 59, 0.95);
+            color: var(--text-white);
+            padding: 12px 20px;
+            border-radius: 50px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideDown 0.3s ease forwards;
+            backdrop-filter: blur(8px);
+            text-align: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .toast.success { border-left: 4px solid var(--primary-gold); }
+        .toast.error { border-left: 4px solid #EF4444; }
+        .toast.info { border-left: 4px solid #3B82F6; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+
+        /* Loading Spinner - Gold */
+        .loading-spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: var(--primary-gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px auto;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Custom Modal Styles */
+        .custom-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            display: none; 
+            align-items: center;
+            justify-content: center;
+        }
+
+        .custom-modal.active {
+            display: flex;
+        }
+
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            position: relative;
+            background: var(--bg-panel);
+            border: 1px solid var(--secondary-gold);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 350px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-content h3 { margin-bottom: 1rem; color: var(--primary-gold); }
+        
+        #modalBarcodeInput {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: white;
+        }
+        
+        #modalBarcodeInput:focus {
+            outline: none;
+            border-color: var(--primary-gold);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
     </style>
 </head>
 <body>
-    <!-- Header with app title and subtitle -->
-    <header>
-        <h3>🕌 Scan Halal Food</h3>
-     </header>
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
 
-    <!-- Main container for all content -->
+    <!-- Header -->
+    <header>
+        <h3>🕌 Scan Halal</h3>
+    </header>
+
+    <!-- Main container -->
     <main class="container">
         <!-- Mode selection tabs -->
-        <nav class="mode-tabs" role="tablist" aria-label="Scanning modes">
-            <button class="mode-tab active" id="barcodeTab" role="tab" aria-selected="true" aria-controls="barcodePanel">
+        <nav class="mode-tabs" role="tablist">
+            <button class="mode-tab active" id="barcodeTab" role="tab">
                 <span class="tab-icon">📦</span>
-                <span>Barcode Scan</span>
+                <span>Barcode</span>
             </button>
-            <button class="mode-tab" id="ocrTab" role="tab" aria-selected="false" aria-controls="ocrPanel">
+            <button class="mode-tab" id="ocrTab" role="tab">
                 <span class="tab-icon">📝</span>
-                <span>Ingredient OCR</span>
+                <span>OCR</span>
             </button>
-            <button class="mode-tab" id="manualTab" role="tab" aria-selected="false" aria-controls="manualPanel">
+            <button class="mode-tab" id="manualTab" role="tab">
                 <span class="tab-icon">🔍</span>
-                <span>Manual Search</span>
+                <span>Manual</span>
             </button>
         </nav>
 
-        <!-- Barcode scanning panel -->
-        <section id="barcodePanel" class="mode-content active" role="tabpanel" aria-labelledby="barcodeTab">
+        <!-- Barcode Panel -->
+        <section id="barcodePanel" class="mode-content active" role="tabpanel">
             <h4>Barcode Scanner</h4>
-          <div class="instructions">
-           <p>   Point your camera at a product barcode (UPC, EAN, QR). Ensure good lighting and hold steady. The scan will happen automatically.</p>
-                </div>
-            <div class="camera-section">
-                <div class="camera-container">
-                    <!-- Video element for camera stream -->
-                    <video id="video" playsinline aria-label="Camera preview for barcode scanning"></video>
-                    <!-- Canvas for capturing frames -->
-                    <canvas id="canvas" style="display: none;"></canvas>
-                    <!-- Scanning overlay animation -->
-                    <div class="scanning-overlay" id="scanOverlay" style="display: none;" aria-hidden="true">
-                        <div class="scan-line"></div>
-                    </div>
-                </div>
-                
-                             
-                <div class="controls">
-                    <button id="startBarcodeScan" class="btn btn-primary">
-                        <span class="btn-icon">📷</span> Start Barcode Scan
-                    </button>
-                    <button id="stopBarcodeScan" class="btn btn-secondary" disabled>
-                        <span class="btn-icon">⏹️</span> Stop Camera
-                    </button>
-                    <button id="manualBarcodeInput" class="btn btn-secondary">
-                        <span class="btn-icon">⌨️</span> Enter Barcode
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- OCR scanning panel -->
-        <section id="ocrPanel" class="mode-content" role="tabpanel" aria-labelledby="ocrTab">
-            <h4>Ingredient OCR Scanner</h4>
-            <div class="camera-section">
-                <div class="camera-container">
-                    <!-- Video preview for camera -->
-                    <video id="cameraPreview" playsinline aria-label="Camera preview for ingredient scanning"></video>
-                    <!-- Canvas for capturing images -->
-                    <canvas id="ocrCanvas" style="display: none;"></canvas>
-                    <!-- Preview for uploaded/gallery images -->
-                    <div id="imagePreview" style="display: none; width: 100%; height: 100%; background-size: contain; background-position: center; background-repeat: no-repeat;" aria-label="Preview of selected image"></div>
-                </div>
-                
-                                
-                <!-- OCR mode selection buttons -->
-                <div class="ocr-options">
-                    <button id="takePhotoBtn" class="btn ocr-option-btn">
-                        <span class="btn-icon">📷</span>Take Photo
-                     </button>
-                    <div class="file-input-wrapper">
-                        <!-- Hidden file input that will be triggered by the "From Gallery" button -->
-                        <input type="file" id="imageUpload" accept="image/*" aria-label="Select image from gallery">
-                        <button id="uploadPhotoBtn" class="btn ocr-option-btn">
-                            <span class="btn-icon">🖼️</span>
-                            <span>From Gallery</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- In the OCR panel controls section, add this button -->
-				<div class="controls">
-				<button id="startOCR" class="btn btn-primary" disabled>
-					<span class="btn-icon">🔍</span> Analyze Ingredients
-				</button>
-				<button id="resetOCR" class="btn btn-secondary">
-					<span class="btn-icon">🔄</span> Reset Camera
-				</button>
-				<button id="clearAllResults" class="btn btn-warning">
-					<span class="btn-icon">🗑️</span> Clear Results
-				</button>
-				</div>
-            </div>
-        </section>
-
-        <!-- Manual search panel -->
-        <section id="manualPanel" class="mode-content" role="tabpanel" aria-labelledby="manualTab">
-            <h4>Manual Ingredient Check</h4>
-            <div class="manual-input">
-                <p>Type or paste ingredients (comma-separated or one per line):</p>
-                <textarea id="manualIngredients" placeholder="e.g., water, sugar, gelatin, E120, natural flavors..." rows="8" aria-label="Enter ingredients to check"></textarea>
-                
-                <div class="controls">
-                    <button id="checkIngredients" class="btn btn-primary">
-                        <span class="btn-icon">✅</span> Check Halal Status
-                    </button>
-                    <button id="clearManual" class="btn btn-secondary">
-                        <span class="btn-icon">🗑️</span> Clear
-                    </button>
-                </div>
-                
-                <div class="instructions">
-                    <p><strong>Tip:</strong> You can copy and paste ingredient lists from websites or product packaging. The scanner will check each ingredient against the Haram database.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Results display section (shared across all modes) -->
-        <section id="resultsSection" class="results-section" aria-labelledby="resultsTitle">
-            <div id="statusDisplay" class="status-display">
-                <!-- Status will be filled dynamically -->
-            </div>
-            
-            <div class="product-info">
-                <h3 id="productName">Product Name</h3>
-                <p id="productBrand">Brand: Not specified</p>
-                
-                <h4>Ingredients Analysis:</h4>
-                <div id="ingredientsList" class="ingredients-list">
-                    <!-- Ingredients will be listed here -->
-                </div>
-                
-                <div id="resultExplanation" class="message">
-                    <!-- Explanation will be added here -->
+            <div class="camera-container">
+                <video id="video" playsinline></video>
+                <canvas id="canvas"></canvas>
+                <div class="scanning-overlay" id="scanOverlay" style="display: none;">
+                    <div class="scan-line"></div>
                 </div>
             </div>
             
             <div class="controls">
-                <button id="newScan" class="btn btn-primary">
-                    <span class="btn-icon">🔄</span> New Scan
+                <button id="startBarcodeScan" class="btn btn-primary">
+                    <span class="btn-icon">📷</span> Start Scan
                 </button>
-                <button id="saveResult" class="btn btn-secondary">
-                    <span class="btn-icon">💾</span> Save to History
+                <button id="stopBarcodeScan" class="btn btn-danger" disabled>
+                    <span class="btn-icon">⏹️</span> Stop
+                </button>
+                <button id="manualBarcodeInput" class="btn btn-secondary">
+                    <span class="btn-icon">⌨️</span> Enter Code
+                </button>
+            </div>
+            <div class="instructions">
+                Point camera at barcode. Auto-scan enabled.
+            </div>
+        </section>
+
+        <!-- OCR Panel -->
+        <section id="ocrPanel" class="mode-content" role="tabpanel">
+            <h4>Ingredient OCR</h4>
+            <div class="camera-container">
+                <video id="cameraPreview" playsinline></video>
+                <canvas id="ocrCanvas"></canvas>
+                <div id="imagePreview" style="display: none; width: 100%; height: 100%; background-size: contain; background-position: center; background-repeat: no-repeat;"></div>
+            </div>
+            
+            <!-- OCR Options: Grid ensures equal sizing -->
+            <div class="ocr-options">
+                <button id="takePhotoBtn" class="btn ocr-option-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                    </svg>
+                    Camera
+                </button>
+                
+                <div class="file-input-wrapper">
+                    <input type="file" id="imageUpload" accept="image/*">
+                    <button id="uploadPhotoBtn" class="btn ocr-option-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V4.5zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                        </svg>
+                        Gallery
+                    </button>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="startOCR" class="btn btn-primary" disabled>
+                    <span class="btn-icon">🔍</span> Analyze
+                </button>
+                <button id="resetOCR" class="btn btn-secondary">
+                    <span class="btn-icon">🔄</span> Reset
                 </button>
             </div>
         </section>
 
-        <!-- History section -->
-        <section class="history-section">
-            <div class="history-title">
-                <h3>Scan History</h3>
-                <button id="clearHistory" class="btn btn-secondary" style="padding: 0.5rem 1.25rem; font-size: 0.9rem;">
-                    Clear History
+        <!-- Manual Panel -->
+        <section id="manualPanel" class="mode-content" role="tabpanel">
+            <h4>Manual Search</h4>
+            <textarea id="manualIngredients" placeholder="Paste ingredients here..."></textarea>
+            
+            <div class="controls">
+                <button id="checkIngredients" class="btn btn-primary">
+                    <span class="btn-icon">✅</span> Check
+                </button>
+                <button id="clearManual" class="btn btn-secondary">
+                    <span class="btn-icon">🗑️</span> Clear
                 </button>
             </div>
-            <div id="historyItems" class="history-items">
-                <!-- History items will be loaded here -->
+        </section>
+
+        <!-- Results Section -->
+        <section id="resultsSection" class="results-section">
+            <div id="statusDisplay" class="status-display">
+                <!-- Dynamic Status -->
+            </div>
+            
+            <div class="product-info">
+                <h3 id="productName">Product Name</h3>
+                <div id="ingredientsList" class="ingredients-list">
+                    <!-- List -->
+                </div>
+            </div>
+            
+            <div class="controls" style="margin-top: 1rem;">
+                <button id="newScan" class="btn btn-primary">
+                    <span class="btn-icon">🔄</span> New Scan
+                </button>
+                <button id="saveResult" class="btn btn-success">
+                    <span class="btn-icon">💾</span> Save
+                </button>
             </div>
         </section>
     </main>
 
+    <!-- Manual Barcode Modal -->
+    <div id="barcodeModal" class="custom-modal">
+        <div class="modal-overlay" id="modalOverlay"></div>
+        <div class="modal-content">
+            <h3>Enter Barcode</h3>
+            <input type="text" id="modalBarcodeInput" placeholder="e.g. 1234567890123" autofocus>
+            <div class="modal-footer">
+                <button id="modalCancelBtn" class="btn btn-secondary">Cancel</button>
+                <button id="modalSubmitBtn" class="btn btn-primary">Search</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer>
-        <p class="footer-text">Halal Scanner v2.0 • All processing happens locally in your browser • No data is collected or stored externally</p>
-        <p class="footer-text">This tool provides guidance only. When in doubt, consult with knowledgeable scholars.</p>
+        Scan Halal v1.0 • Private & Local
     </footer>
 
-    <!-- Main JavaScript code -->
-   <script>
+    <script>
     // ============================================
-    // 1. GLOBAL VARIABLES AND STATE
+    // 1. GLOBAL VARIABLES
     // ============================================
     const video = document.getElementById('video');
     const cameraPreview = document.getElementById('cameraPreview');
@@ -1359,67 +811,50 @@ footer::before {
     let barcodeDetectionActive = false;
 
     // ============================================
-    // 2. UTILITY FUNCTIONS
+    // 2. UI HELPERS (Toast & Modal)
     // ============================================
     
-    function showMessage(text, type) {
-        const existingMessage = document.querySelector('.message:not(#resultExplanation)');
-        if (existingMessage) existingMessage.remove();
-
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${type}`;
-        messageDiv.textContent = text;
-
-        const currentPanel = document.querySelector('.mode-content.active');
-        if (currentPanel) currentPanel.appendChild(messageDiv);
-
-        if (type === 'success') {
-            setTimeout(() => {
-                if (messageDiv.parentNode) {
-                    messageDiv.style.opacity = '0';
-                    setTimeout(() => messageDiv.remove(), 300);
-                }
-            }, 5000);
-        }
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        let icon = 'ℹ️';
+        if (type === 'success') icon = '✅';
+        if (type === 'error') icon = '❌';
+        
+        toast.innerHTML = `<span>${icon}</span> ${message}`;
+        container.appendChild(toast);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.3s forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
+    
+    function showModal() {
+        document.getElementById('barcodeModal').classList.add('active');
+        document.getElementById('modalBarcodeInput').focus();
+    }
+    
+    function hideModal() {
+        document.getElementById('barcodeModal').classList.remove('active');
+        document.getElementById('modalBarcodeInput').value = '';
+    }
+
+    // ============================================
+    // 3. CORE LOGIC
+    // ============================================
     
     function clearResultsOnTabSwitch() {
-        const resultsSection = document.getElementById('resultsSection');
-        resultsSection.classList.remove('active');
-        
-        const statusDisplay = document.getElementById('statusDisplay');
-        statusDisplay.className = 'status-display';
-        statusDisplay.innerHTML = `
-            <div class="status-icon">📱</div>
-            <div class="status-text">Halal Scanner</div>
-            <div class="status-subtext">Select a mode above to start scanning</div>
-        `;
-        
-        document.getElementById('productName').textContent = 'Product Name';
-        document.getElementById('ingredientsList').innerHTML = `
-            <div class="ingredient-item">No scan results yet</div>
-        `;
-        
-        const explanation = document.getElementById('resultExplanation');
-        explanation.textContent = 'Scan results will appear here.';
-        explanation.className = 'message';
-        
+        document.getElementById('resultsSection').classList.remove('active');
         lastScanMode = null;
     }
-    
-    function clearAllResults() {
-        clearResultsOnTabSwitch();
-        alert('All results cleared');
-    }
 
-    // ============================================
-    // 3. CAMERA FUNCTIONS
-    // ============================================
-    
     async function startBarcodeCamera() {
-        console.log('Starting barcode camera...');
         startBarcodeScanBtn.disabled = true;
-        startBarcodeScanBtn.innerHTML = '<span class="btn-icon">📷</span> Starting Camera...';
+        startBarcodeScanBtn.innerHTML = '<span class="btn-icon">⏳</span> Starting...';
         
         try {
             if (currentStream) {
@@ -1435,128 +870,39 @@ footer::before {
             currentStream = stream;
             video.srcObject = stream;
             
-            await new Promise((resolve) => {
-                video.onloadedmetadata = () => {
-                    console.log('Video metadata loaded');
-                    resolve();
-                };
-                setTimeout(resolve, 1000);
-            });
+            await new Promise(resolve => video.onloadedmetadata = resolve);
             
             startBarcodeDetection();
             scanOverlay.style.display = 'block';
-            startBarcodeScanBtn.innerHTML = '<span class="btn-icon">🔍</span> Scanning...';
+            startBarcodeScanBtn.innerHTML = '<span class="btn-icon">🔴</span> Scanning';
             stopBarcodeScanBtn.disabled = false;
             
         } catch (error) {
-            console.error('Barcode camera error:', error);
-            let msg = error.name === 'NotAllowedError' ? 
-                'Camera permission denied. Please allow camera access.' : 
-                'Camera error: ' + error.message;
-            alert(msg);
-            startBarcodeScanBtn.disabled = false;
-            startBarcodeScanBtn.innerHTML = '<span class="btn-icon">📷</span> Start Barcode Scan';
+            console.error(error);
+            showToast('Camera permission denied', 'error');
+            resetBarcodeUI();
         }
     }
     
-    async function startOCRCamera() {
-        console.log('Starting OCR camera...');
-        takePhotoBtn.disabled = true;
-        takePhotoBtn.innerHTML = '<span class="btn-icon">📷</span> Starting Camera...';
+    function resetBarcodeUI() {
+        startBarcodeScanBtn.disabled = false;
+        startBarcodeScanBtn.innerHTML = '<span class="btn-icon">📷</span> Start Scan';
+        stopBarcodeScanBtn.disabled = true;
+    }
+    
+    function startBarcodeDetection() {
+        if (!barcodeScanner) return;
+        barcodeDetectionActive = true;
         
-        try {
-            if (currentStream) {
-                currentStream.getTracks().forEach(track => track.stop());
+        barcodeScanner.decodeFromVideoDevice(null, video, (result, error) => {
+            if (!barcodeDetectionActive) return;
+            
+            if (result) {
+                barcodeDetectionActive = false;
+                stopCamera();
+                fetchProductData(result.text);
             }
-            
-            const constraints = {
-                video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
-                audio: false
-            };
-            
-            const stream = await navigator.mediaDevices.getUserMedia(constraints);
-            currentStream = stream;
-            cameraPreview.srcObject = stream;
-            
-            await cameraPreview.play();
-            
-            isOCRCameraReady = true;
-            takePhotoBtn.innerHTML = '<span class="btn-icon">📷</span> Camera Ready';
-            takePhotoBtn.disabled = false;
-            
-            // Add capture button
-            addCaptureButton();
-            
-        } catch (error) {
-            console.error('OCR camera error:', error);
-            let msg = error.name === 'NotAllowedError' ? 
-                'Camera permission denied. Please allow camera access.' : 
-                'Camera error: ' + error.message;
-            alert(msg);
-            takePhotoBtn.disabled = false;
-            takePhotoBtn.innerHTML = '<span class="btn-icon">📷</span> Take Photo';
-        }
-    }
-    
-    function addCaptureButton() {
-        const existingBtn = document.getElementById('capturePhotoBtn');
-        if (existingBtn) existingBtn.remove();
-        
-        const capturePhotoBtn = document.createElement('button');
-        capturePhotoBtn.id = 'capturePhotoBtn';
-        capturePhotoBtn.className = 'btn btn-success';
-        capturePhotoBtn.innerHTML = '<span class="btn-icon">⭕</span> CAPTURE PHOTO';
-        capturePhotoBtn.style.cssText = 'margin-top: 15px; padding: 15px; font-size: 1.1em; width: 100%;';
-        
-        takePhotoBtn.parentNode.insertBefore(capturePhotoBtn, takePhotoBtn.nextSibling);
-        
-        // FIXED: Enable the capture button with proper click handler
-        capturePhotoBtn.addEventListener('click', capturePhoto);
-        capturePhotoBtn.disabled = false;
-    }
-    
-    function capturePhoto() {
-        if (!currentStream || !isOCRCameraReady) {
-            alert('Camera not ready.');
-            return;
-        }
-        
-        console.log('Capturing photo...');
-        
-        let canvas = document.getElementById('ocrCanvas');
-        if (!canvas) {
-            canvas = document.createElement('canvas');
-            canvas.id = 'ocrCanvas';
-            canvas.style.display = 'none';
-            document.body.appendChild(canvas);
-        }
-        
-        canvas.width = cameraPreview.videoWidth;
-        canvas.height = cameraPreview.videoHeight;
-        
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(cameraPreview, 0, 0, canvas.width, canvas.height);
-        
-        ocrImageData = canvas.toDataURL('image/jpeg', 0.8);
-        
-        imagePreview.style.backgroundImage = `url(${ocrImageData})`;
-        imagePreview.style.display = 'block';
-        cameraPreview.style.display = 'none';
-        
-        // Enable analyze button
-        startOCRBtn.disabled = false;
-        
-        // Update UI - FIXED: Capture button remains enabled for retake
-        const captureBtn = document.getElementById('capturePhotoBtn');
-        if (captureBtn) {
-            captureBtn.innerHTML = '<span class="btn-icon">✅</span> Photo Captured!';
-            captureBtn.disabled = false; // KEEP ENABLED for retake
-        }
-        
-        takePhotoBtn.innerHTML = '<span class="btn-icon">🔄</span> Retake';
-        takePhotoBtn.disabled = false;
-        
-        console.log('Photo captured');
+        });
     }
     
     function stopCamera() {
@@ -1564,95 +910,135 @@ footer::before {
             currentStream.getTracks().forEach(track => track.stop());
             currentStream = null;
         }
-        
         video.srcObject = null;
         cameraPreview.srcObject = null;
         scanOverlay.style.display = 'none';
-        isOCRCameraReady = false;
         barcodeDetectionActive = false;
+        isOCRCameraReady = false;
         
-        if (barcodeScanner) {
-            barcodeScanner.reset();
-        }
+        if (barcodeScanner) barcodeScanner.reset();
+        resetBarcodeUI();
         
-        startBarcodeScanBtn.disabled = false;
-        startBarcodeScanBtn.innerHTML = '<span class="btn-icon">📷</span> Start Barcode Scan';
-        stopBarcodeScanBtn.disabled = true;
-        
-        takePhotoBtn.disabled = false;
-        takePhotoBtn.innerHTML = '<span class="btn-icon">📷</span> Take Photo';
-        
+        // Reset OCR UI state
         const captureBtn = document.getElementById('capturePhotoBtn');
         if (captureBtn) captureBtn.remove();
+        takePhotoBtn.disabled = false;
+        takePhotoBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:22px; height:22px">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+            </svg> Camera`;
+    }
+
+    // OCR Logic
+    async function startOCRCamera() {
+        takePhotoBtn.disabled = true;
+        takePhotoBtn.innerHTML = 'Starting...';
+        
+        try {
+            if (currentStream) currentStream.getTracks().forEach(t => t.stop());
+            
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+            });
+            
+            currentStream = stream;
+            cameraPreview.srcObject = stream;
+            await cameraPreview.play();
+            
+            isOCRCameraReady = true;
+            takePhotoBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:22px; height:22px">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+            </svg> Ready`;
+            takePhotoBtn.disabled = false;
+            addCaptureButton();
+            
+        } catch (e) {
+            showToast('Camera access error', 'error');
+            takePhotoBtn.disabled = false;
+            takePhotoBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:22px; height:22px">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+            </svg> Camera`;
+        }
+    }
+    
+    function addCaptureButton() {
+        const existing = document.getElementById('capturePhotoBtn');
+        if (existing) existing.remove();
+        
+        const btn = document.createElement('button');
+        btn.id = 'capturePhotoBtn';
+        btn.className = 'btn btn-primary'; // Gold button
+        btn.innerHTML = '<span class="btn-icon">⭕</span> CAPTURE';
+        btn.style.marginTop = '10px';
+        btn.style.width = '100%';
+        btn.onclick = capturePhoto;
+        
+        takePhotoBtn.parentNode.insertBefore(btn, takePhotoBtn.nextSibling);
+    }
+    
+    function capturePhoto() {
+        if (!isOCRCameraReady) return;
+        
+        const canvas = document.getElementById('ocrCanvas');
+        canvas.width = cameraPreview.videoWidth;
+        canvas.height = cameraPreview.videoHeight;
+        canvas.getContext('2d').drawImage(cameraPreview, 0, 0);
+        
+        ocrImageData = canvas.toDataURL('image/jpeg', 0.8);
+        imagePreview.style.backgroundImage = `url(${ocrImageData})`;
+        imagePreview.style.display = 'block';
+        cameraPreview.style.display = 'none';
+        
+        startOCRBtn.disabled = false;
+        takePhotoBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:22px; height:22px">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+            </svg> Retake`;
+        
+        const capBtn = document.getElementById('capturePhotoBtn');
+        if (capBtn) capBtn.remove();
     }
     
     function resetOCR() {
         imagePreview.style.display = 'none';
         cameraPreview.style.display = 'block';
         startOCRBtn.disabled = true;
-        startOCRBtn.innerHTML = '<span class="btn-icon">🔍</span> Analyze Ingredients';
         ocrImageData = null;
         imageUpload.value = '';
         isOCRCameraReady = false;
         
-        const captureBtn = document.getElementById('capturePhotoBtn');
-        if (captureBtn) captureBtn.remove();
+        const capBtn = document.getElementById('capturePhotoBtn');
+        if (capBtn) capBtn.remove();
         
         takePhotoBtn.disabled = false;
-        takePhotoBtn.innerHTML = '<span class="btn-icon">📷</span> Take Photo';
-        
-        // Clear results if from OCR
-        if (lastScanMode === 'ocr' || currentMode === 'ocr') {
-            clearResultsOnTabSwitch();
-        }
-        
+        takePhotoBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:22px; height:22px">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+            </svg> Camera`;
         stopCamera();
+        
+        if (lastScanMode === 'ocr') clearResultsOnTabSwitch();
     }
 
     // ============================================
-    // 4. BARCODE SCANNING
+    // 4. ANALYSIS LOGIC
     // ============================================
     
-    function initBarcodeScanner() {
-        try {
-            const { BrowserMultiFormatReader } = window.ZXing;
-            barcodeScanner = new BrowserMultiFormatReader();
-            console.log('Barcode scanner ready');
-        } catch (error) {
-            console.error('Barcode scanner init failed:', error);
-        }
-    }
-    
-    function startBarcodeDetection() {
-        if (!barcodeScanner) return;
-        
-        console.log('Starting barcode detection...');
-        barcodeDetectionActive = true;
-        
-        barcodeScanner.decodeFromVideoDevice(null, video, (result, error) => {
-            if (!barcodeDetectionActive) return;
-            
-            if (result) {
-                console.log('Barcode detected:', result.text);
-                barcodeDetectionActive = false;
-                stopCamera();
-                fetchProductData(result.text);
-            }
-            
-            if (error && !error.message.includes('NotFoundException')) {
-                console.warn('Barcode scan warning:', error);
-            }
-        });
-    }
-    
+    const haramDatabase = {
+        haram: ['pork', 'bacon', 'ham', 'lard', 'alcohol', 'ethanol', 'wine', 'beer', 'liquor', 'rum', 'whisky', 'brandy', 'blood', 'pepsin', 'e542', 'gelatin from pig', 'carmine', 'cochineal', 'e120', 'enzymes from pig'],
+        mushbooh: ['gelatin', 'gelatine', 'tallow', 'rennet', 'lipase', 'e441', 'e904', 'e471', 'e472', 'e473', 'e474', 'e475', 'e476', 'e477', 'e478', 'e479', 'e481', 'e482', 'e483', 'e491', 'e492', 'e493', 'e494', 'e495', 'e631', 'e627', 'e634', 'e635', 'e920', 'e966', 'e1105', 'mono and diglycerides', 'lecithin', 'whey', 'casein', 'magnesium stearate', 'stearic acid', 'glycerol', 'glycerine', 'collagen', 'vanilla extract', 'wine vinegar', 'balsamic vinegar']
+    };
+
     async function fetchProductData(barcode) {
         const statusDisplay = document.getElementById('statusDisplay');
-        statusDisplay.innerHTML = `
-            <div class="loading-container">
-                <div class="loading-spinner"></div>
-                <p>Looking up product information...</p>
-            </div>
-        `;
+        statusDisplay.innerHTML = `<div class="loading-spinner"></div><div>Looking up product...</div>`;
+        statusDisplay.className = 'status-display'; // reset colors
         
         document.getElementById('resultsSection').classList.add('active');
         
@@ -1663,394 +1049,220 @@ footer::before {
             if (data.status === 1 && data.product) {
                 analyzeProductIngredients(data.product);
             } else {
-                showResult('Product Not Found', 'unknown', 
-                    `Barcode: ${barcode}\nProduct not found in database.`);
+                showResult('Product Not Found', 'unknown', `Barcode: ${barcode}\nNo data found in database.`);
             }
         } catch (error) {
-            showResult('Network Error', 'unknown', 
-                `Failed to fetch product data. Please check connection.\nBarcode: ${barcode}`);
+            showToast('Network error checking barcode', 'error');
+            showResult('Error', 'unknown', 'Could not connect to server.');
         }
     }
 
-    // ============================================
-    // 5. OCR ANALYSIS
-    // ============================================
-    
-    function handleImageUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        if (!file.type.match('image.*')) {
-            alert('Please select an image file (JPEG, PNG, etc.)');
-            return;
-        }
-        
-        startOCRBtn.disabled = true;
-        startOCRBtn.innerHTML = '<span class="btn-icon">⏳</span> Loading Image...';
-        
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            ocrImageData = e.target.result;
-            
-            console.log('Image loaded from gallery');
-            
-            imagePreview.style.backgroundImage = `url(${ocrImageData})`;
-            imagePreview.style.display = 'block';
-            cameraPreview.style.display = 'none';
-            
-            const captureBtn = document.getElementById('capturePhotoBtn');
-            if (captureBtn) captureBtn.remove();
-            
-            takePhotoBtn.innerHTML = '<span class="btn-icon">🖼️</span> Image Loaded';
-            startOCRBtn.disabled = false;
-            startOCRBtn.innerHTML = '<span class="btn-icon">🔍</span> Analyze Ingredients';
-            
-            showMessage('Image loaded successfully.', 'success');
-        };
-        
-        reader.onerror = function() {
-            alert('Failed to read image file.');
-            startOCRBtn.disabled = false;
-            startOCRBtn.innerHTML = '<span class="btn-icon">🔍</span> Analyze Ingredients';
-        };
-        
-        reader.readAsDataURL(file);
+    function analyzeProductIngredients(product) {
+        lastScanMode = 'barcode';
+        let ingredientsText = product.ingredients_text || product.ingredients?.map(i => i.text).join(', ') || '';
+        if (!ingredientsText) ingredientsText = 'Ingredients not specified';
+        analyzeIngredients(ingredientsText, product.product_name || 'Unknown Product');
     }
-    
+
     async function performOCR() {
-        if (!ocrImageData) {
-            alert('No image to analyze.');
-            return;
-        }
+        if (!ocrImageData) return;
         
         startOCRBtn.disabled = true;
-        startOCRBtn.innerHTML = '<span class="btn-icon">⏳</span> Analyzing...';
+        startOCRBtn.innerHTML = '<span class="btn-icon">⏳</span> Processing...';
         
         const statusDisplay = document.getElementById('statusDisplay');
-        statusDisplay.innerHTML = `
-            <div class="loading-container">
-                <div class="loading-spinner"></div>
-                <p>Processing image with OCR...</p>
-            </div>
-        `;
-        
+        statusDisplay.innerHTML = `<div class="loading-spinner"></div><div>Reading Text...</div>`;
+        statusDisplay.className = 'status-display';
         document.getElementById('resultsSection').classList.add('active');
         
         try {
             const worker = await Tesseract.createWorker('eng');
-            
-            await worker.setParameters({
-                tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
-                tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789,.;()-: ',
-                preserve_interword_spaces: '1'
-            });
-            
             const { data: { text } } = await worker.recognize(ocrImageData);
             await worker.terminate();
             
-            console.log('OCR extracted:', text);
-            
-            if (!text || text.trim().length < 10) {
-                showResult('OCR Scan Failed', 'unknown',
-                    'Could not read text from image. Ensure good lighting and clear focus.');
+            if (text.trim().length < 5) {
+                showResult('Scan Failed', 'unknown', 'Could not read clear text.');
             } else {
-                analyzeIngredients(text);
+                analyzeIngredients(text, 'OCR Scan Result');
             }
-            
-        } catch (error) {
-            console.error('OCR error:', error);
-            showResult('OCR Error', 'unknown',
-                'OCR processing failed. Try a clearer image.');
+        } catch (e) {
+            showToast('OCR failed', 'error');
+            showResult('Error', 'unknown', 'OCR processing error.');
         }
         
         startOCRBtn.disabled = false;
-        startOCRBtn.innerHTML = '<span class="btn-icon">🔍</span> Analyze Ingredients';
+        startOCRBtn.innerHTML = '<span class="btn-icon">🔍</span> Analyze';
     }
 
-    // ============================================
-    // 6. INGREDIENT DATABASE & ANALYSIS
-    // ============================================
-    
-    const haramDatabase = {
-        haram: [
-            'pork', 'bacon', 'ham', 'lard', 'alcohol', 'ethanol', 'wine', 'beer',
-            'liquor', 'rum', 'whisky', 'brandy', 'blood', 'blood plasma', 'bone meal',
-            'pepsin', 'e542', 'pork fat', 'pig liver', 'enzymes from pig', 'fermented beverages',
-            'ambergris', 'castoreum', 'civet', 'fermented cider', 'hard cider', 'sherry wine', 
-            'soya sauce naturally brewed with alcohol', 'torula yeast grown on liquor', 'bacon bits', 
-            'black pudding', 'blood sausage', 'pig fat', 'cheese with non-halal rennet', 
-            'non-halal tallow', 'vitamins from non-halal', 'pork chops', 'calcium stearate from pig fat'
-        ],
-        mushbooh: [
-            'gelatin', 'gelatine', 'tallow', 'rennet', 'lipase', 'carmine', 'cochineal',
-            'shellac', 'e120', 'e441', 'e904', 'e422', 'e470', 'e471', 'e472', 'e473',
-            'e474', 'e475', 'e476', 'e477', 'e478', 'e479', 'e481', 'e482', 'e483',
-            'e491', 'e492', 'e493', 'e494', 'e495', 'e631', 'e627', 'e634', 'e635',
-            'e920', 'e966', 'e1105', 'vanilla extract', 'wine vinegar', 'balsamic vinegar',
-            'mono and diglycerides', 'lecithin', 'whey', 'casein', 'magnesium stearate',
-            'stearic acid', 'glycerol', 'glycerine', 'collagen', 'elastin', 'keratin',
-            'taurine', 'urea', 'musk', 'ambergris', 'castoreum', 'civet', 'hard cider',
-            'sherry wine', 'soya sauce naturally brewed with alcohol', 'torula yeast grown on liquor',
-            'bacon bits', 'black pudding', 'blood sausage', 'foie gras', 'haggis', 'pate',
-            'e100', 'e101', 'e132', 'e160a', 'e544', 'e556', 'e570', 'e572',
-            'e620', 'e621', 'e622', 'e623', 'e640', 'e924', 'animal fat', 'animal oil', 
-            'animal shortening', 'rennin', 'suet', 'dripping', 'diglyceride', 'mono glycerides',
-            'shortening', 'emulsifiers', 'hormones', 'carmoisine', 'azorubine', 'indigo carmine', 
-            'idigotine', 'alpha-carotene', 'beta-carotene', 'gamma-carotene', 'sucrose esters', 
-            'sucroglycerides', 'polyglycerol esters', 'propylene glycol', 'lactic acid esters',
-            'carrageenan if alcohol', 'casein if non-halal', 'whey protein if non-halal', 
-            'yeast extract if alcohol', 'nucleic acid', 'beef extract', 'chicken extract', 
-            'fish extract', "brewer's yeast", 'malt vinegar'
-        ]
-    };
-    
-    function analyzeProductIngredients(product) {
-        lastScanMode = 'barcode';
-        let ingredientsText = '';
-        
-        if (product.ingredients_text) {
-            ingredientsText = product.ingredients_text;
-        } else if (product.ingredients) {
-            ingredientsText = product.ingredients.map(ing => ing.text).join(', ');
-        }
-        
-        if (!ingredientsText) {
-            ingredientsText = 'Ingredients not specified in product database';
-        }
-        
-        analyzeIngredients(ingredientsText, product.product_name || 'Scanned Product');
-    }
-    
-    function analyzeIngredients(text, productName = 'OCR Scanned Product') {
-        lastScanMode = 'ocr';
+    function analyzeIngredients(text, productName) {
         const lowerText = text.toLowerCase();
-        const foundHaram = [];
-        const foundMushbooh = [];
-        
-        haramDatabase.haram.forEach(ingredient => {
-            if (lowerText.includes(ingredient.toLowerCase())) {
-                foundHaram.push(ingredient);
-            }
-        });
-        
-        haramDatabase.mushbooh.forEach(ingredient => {
-            if (lowerText.includes(ingredient.toLowerCase())) {
-                foundMushbooh.push(ingredient);
-            }
-        });
+        const foundHaram = haramDatabase.haram.filter(i => lowerText.includes(i));
+        const foundMushbooh = haramDatabase.mushbooh.filter(i => lowerText.includes(i));
         
         let status = 'halal';
-        let message = 'No Haram or doubtful ingredients detected. Product appears Halal. ✅';
+        if (foundHaram.length > 0) status = 'haram';
+        else if (foundMushbooh.length > 0) status = 'mushbooh';
         
-        if (foundHaram.length > 0) {
-            status = 'haram';
-            message = `CONTAINS HARAM INGREDIENTS: ${foundHaram.join(', ')}. ❌\n\nThis product should be avoided.`;
-        } else if (foundMushbooh.length > 0) {
-            status = 'mushbooh';
-            message = `Contains doubtful ingredients: ${foundMushbooh.join(', ')}. ⚠️\n\nPlease verify the source of these ingredients.`;
-        }
+        let msg = status === 'halal' ? 'No Haram ingredients detected.' :
+                  status === 'haram' ? 'Haram ingredients found.' : 'Doubtful ingredients found.';
         
-        showResult(productName, status, text, message);
-        highlightIngredients(foundHaram, foundMushbooh);
-    }
-    
-    function highlightIngredients(haramList, mushboohList) {
-        const ingredientItems = document.querySelectorAll('.ingredient-item');
-        
-        ingredientItems.forEach(item => {
-            const text = item.textContent.toLowerCase();
-            
-            const isHaram = haramList.some(ing => text.includes(ing.toLowerCase()));
-            const isMushbooh = mushboohList.some(ing => text.includes(ing.toLowerCase()));
-            
-            if (isHaram) {
-                item.classList.add('ingredient-haram');
-                item.innerHTML = `${item.textContent} <span class="match-type">HARAM</span>`;
-            } else if (isMushbooh) {
-                item.classList.add('ingredient-mushbooh');
-                item.innerHTML = `${item.textContent} <span class="match-type">MUSHBOOH</span>`;
-            }
-        });
+        showResult(productName, status, text, msg, foundHaram, foundMushbooh);
     }
 
-    // ============================================
-    // 7. RESULTS DISPLAY
-    // ============================================
-    
-    function showResult(productName, status, ingredients, customMessage = null) {
+    function showResult(name, status, rawText, message, haramList = [], mushboohList = []) {
         const statusDisplay = document.getElementById('statusDisplay');
-        statusDisplay.className = 'status-display';
-        statusDisplay.classList.add(`status-${status}`);
+        statusDisplay.className = `status-display status-${status}`;
         
-        let icon = '✅', statusText = 'HALAL - Permissible';
-        if (status === 'haram') {
-            icon = '❌';
-            statusText = 'HARAM - Forbidden';
-        } else if (status === 'mushbooh') {
-            icon = '⚠️';
-            statusText = 'MUSHBOOH - Doubtful';
-        } else if (status === 'unknown') {
-            icon = '❓';
-            statusText = 'UNKNOWN - Cannot Determine';
-        }
-        
-        const message = customMessage || 
-            (status === 'halal' ? 'No Haram ingredients detected.' :
-             status === 'haram' ? 'Contains Haram ingredients. Avoid this product.' :
-             'Contains doubtful ingredients. Verify sources.');
+        let icon = '✅';
+        let text = 'HALAL';
+        if (status === 'haram') { icon = '❌'; text = 'HARAM'; }
+        if (status === 'mushbooh') { icon = '⚠️'; text = 'MUSHBOOH'; }
+        if (status === 'unknown') { icon = '❓'; text = 'UNKNOWN'; }
         
         statusDisplay.innerHTML = `
             <div class="status-icon">${icon}</div>
-            <div class="status-text">${statusText}</div>
+            <div class="status-text">${text}</div>
             <div class="status-subtext">${message}</div>
         `;
         
-        document.getElementById('productName').textContent = productName;
+        document.getElementById('productName').textContent = name;
         
-        const ingredientsList = document.getElementById('ingredientsList');
-        ingredientsList.innerHTML = '';
+        const list = document.getElementById('ingredientsList');
+        list.innerHTML = '';
         
-        const lines = ingredients.split(/[,;]|\n|\.\s+/);
+        const items = rawText.split(/[,;]|\n|\.\s+/).filter(i => i.trim());
         
-        lines.forEach((line, index) => {
-            if (line.trim()) {
+        if (items.length === 0) {
+            list.innerHTML = '<div class="ingredient-item">No ingredients to display</div>';
+        } else {
+            items.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'ingredient-item';
-                div.textContent = `${index + 1}. ${line.trim()}`;
-                ingredientsList.appendChild(div);
-            }
-        });
-        
-        const explanation = document.getElementById('resultExplanation');
-        explanation.textContent = message;
-        explanation.className = `message ${status === 'halal' ? 'success' : 
-                               status === 'haram' ? 'error' : 'warning'}`;
+                const cleanItem = item.trim();
+                
+                // Check matches
+                let type = '';
+                let typeClass = '';
+                
+                if (haramList.some(h => cleanItem.toLowerCase().includes(h))) {
+                    typeClass = 'ingredient-haram';
+                    type = '<span class="match-type" style="background:#EF4444">HARAM</span>';
+                } else if (mushboohList.some(m => cleanItem.toLowerCase().includes(m))) {
+                    typeClass = 'ingredient-mushbooh';
+                    type = '<span class="match-type" style="background:#F59E0B">DOUBTFUL</span>';
+                }
+                
+                div.className = `ingredient-item ${typeClass}`;
+                div.innerHTML = `<span>${cleanItem}</span> ${type}`;
+                list.appendChild(div);
+            });
+        }
         
         document.getElementById('resultsSection').classList.add('active');
         
+        // Scroll to result
         setTimeout(() => {
-            document.getElementById('resultsSection').scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'start' 
-            });
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 100);
     }
 
     // ============================================
-    // 8. EVENT HANDLERS & INITIALIZATION
+    // 5. INITIALIZATION
     // ============================================
     
-    function setupEventListeners() {
-        console.log('Setting up event listeners...');
+    function init() {
+        // Barcode Scanner Init
+        try {
+            barcodeScanner = new ZXing.BrowserMultiFormatReader();
+        } catch (e) {
+            console.error('ZXing error', e);
+        }
         
-        // Barcode
-        startBarcodeScanBtn.addEventListener('click', startBarcodeCamera);
-        stopBarcodeScanBtn.addEventListener('click', stopCamera);
-        
-        document.getElementById('manualBarcodeInput').addEventListener('click', () => {
-            const barcode = prompt('Enter product barcode (UPC/EAN):', '');
-            if (barcode && barcode.trim()) {
-                fetchProductData(barcode.trim());
-            }
-        });
-        
-        // OCR
-        takePhotoBtn.addEventListener('click', startOCRCamera);
-        
-        document.getElementById('uploadPhotoBtn').addEventListener('click', () => {
-            imageUpload.click();
-        });
-        
-        imageUpload.addEventListener('change', handleImageUpload);
-        startOCRBtn.addEventListener('click', performOCR);
-        document.getElementById('resetOCR').addEventListener('click', resetOCR);
-        
-        document.getElementById('clearAllResults').addEventListener('click', clearAllResults);
-        
-        // Manual
-        document.getElementById('checkIngredients').addEventListener('click', () => {
-            const text = document.getElementById('manualIngredients').value;
-            if (text) {
-                analyzeIngredients(text, 'Manual Ingredient Check');
-            } else {
-                alert('Please enter ingredients to check.');
-            }
-        });
-        
-        document.getElementById('clearManual').addEventListener('click', () => {
-            document.getElementById('manualIngredients').value = '';
-        });
-        
-        // Results
-        document.getElementById('newScan').addEventListener('click', () => {
-            document.getElementById('resultsSection').classList.remove('active');
-            stopCamera();
-            resetOCR();
-        });
-        
-        document.getElementById('saveResult').addEventListener('click', () => {
-            alert('Scan saved to history!');
-        });
-        
-        document.getElementById('clearHistory').addEventListener('click', () => {
-            if (confirm('Clear all scan history?')) {
-                alert('History cleared!');
-            }
-        });
-        
-        // Tab switching
+        // Tab Switching
         document.querySelectorAll('.mode-tab').forEach(tab => {
             tab.addEventListener('click', () => {
-                const targetId = tab.id.replace('Tab', 'Panel');
+                const target = tab.id.replace('Tab', 'Panel');
                 
-                // Update tabs
-                document.querySelectorAll('.mode-tab').forEach(t => {
-                    t.classList.remove('active');
-                    t.setAttribute('aria-selected', 'false');
-                });
+                document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
-                tab.setAttribute('aria-selected', 'true');
                 
-                // Update panels
-                document.querySelectorAll('.mode-content').forEach(panel => {
-                    panel.classList.remove('active');
-                });
-                document.getElementById(targetId).classList.add('active');
+                document.querySelectorAll('.mode-content').forEach(p => p.classList.remove('active'));
+                document.getElementById(target).classList.add('active');
                 
-                // Update mode and clear results
                 currentMode = tab.id.replace('Tab', '');
                 clearResultsOnTabSwitch();
                 stopCamera();
                 
-                // Reset OCR if switching to OCR tab
-                if (currentMode === 'ocr') {
-                    resetOCR();
-                }
+                if (currentMode === 'ocr') resetOCR();
             });
         });
-    }
-    
-    function initializeApp() {
-        console.log('Initializing Halal Scanner...');
         
-        // Initialize barcode scanner
-        initBarcodeScanner();
+        // Event Listeners
+        startBarcodeScanBtn.addEventListener('click', startBarcodeCamera);
+        stopBarcodeScanBtn.addEventListener('click', stopCamera);
         
-        // Setup event listeners
-        setupEventListeners();
+        // Manual Barcode Modal
+        document.getElementById('manualBarcodeInput').addEventListener('click', showModal);
+        document.getElementById('modalCancelBtn').addEventListener('click', hideModal);
+        document.getElementById('modalOverlay').addEventListener('click', hideModal);
+        document.getElementById('modalSubmitBtn').addEventListener('click', () => {
+            const code = document.getElementById('modalBarcodeInput').value.trim();
+            if (code) {
+                hideModal();
+                fetchProductData(code);
+            }
+        });
+
+        // OCR Events
+        takePhotoBtn.addEventListener('click', startOCRCamera);
+        document.getElementById('uploadPhotoBtn').addEventListener('click', () => imageUpload.click());
+        imageUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    ocrImageData = evt.target.result;
+                    imagePreview.style.backgroundImage = `url(${ocrImageData})`;
+                    imagePreview.style.display = 'block';
+                    cameraPreview.style.display = 'none';
+                    startOCRBtn.disabled = false;
+                    takePhotoBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:22px; height:22px">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V4.5zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                        </svg> Loaded`;
+                    const capBtn = document.getElementById('capturePhotoBtn');
+                    if (capBtn) capBtn.remove();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        startOCRBtn.addEventListener('click', performOCR);
+        document.getElementById('resetOCR').addEventListener('click', resetOCR);
         
-        // Clean up on page unload
+        // Manual Search
+        document.getElementById('checkIngredients').addEventListener('click', () => {
+            const text = document.getElementById('manualIngredients').value;
+            if (text) analyzeIngredients(text, 'Manual Check');
+            else showToast('Please enter text first', 'warning');
+        });
+        document.getElementById('clearManual').addEventListener('click', () => {
+            document.getElementById('manualIngredients').value = '';
+        });
+        
+        // Results Actions
+        document.getElementById('newScan').addEventListener('click', () => {
+            document.getElementById('resultsSection').classList.remove('active');
+            resetOCR();
+        });
+        document.getElementById('saveResult').addEventListener('click', () => {
+            showToast('Result Saved!', 'success');
+        });
+        
+        // Cleanup
         window.addEventListener('beforeunload', stopCamera);
-        
-        console.log('Halal Scanner ready!');
     }
 
-    // ============================================
-    // 9. INITIALIZE APPLICATION
-    // ============================================
-    
-    document.addEventListener('DOMContentLoaded', initializeApp);
-</script>
+    document.addEventListener('DOMContentLoaded', init);
+    </script>
 </body>
 </html>
