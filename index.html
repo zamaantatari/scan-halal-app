@@ -1165,9 +1165,8 @@ footer::before {
 <body>
     <!-- Header with app title and subtitle -->
     <header>
-        <h1>🕌 Halal Scanner</h1>
-        <p class="subtitle">Verify food products for Halal compliance using barcode scanning, OCR, and manual ingredient analysis</p>
-    </header>
+        <h3>🕌 Scan Halal Food</h3>
+     </header>
 
     <!-- Main container for all content -->
     <main class="container">
@@ -1189,7 +1188,10 @@ footer::before {
 
         <!-- Barcode scanning panel -->
         <section id="barcodePanel" class="mode-content active" role="tabpanel" aria-labelledby="barcodeTab">
-            <h2>Barcode Scanner</h2>
+            <h4>Barcode Scanner</h4>
+          <div class="instructions">
+           <p>   Point your camera at a product barcode (UPC, EAN, QR). Ensure good lighting and hold steady. The scan will happen automatically.</p>
+                </div>
             <div class="camera-section">
                 <div class="camera-container">
                     <!-- Video element for camera stream -->
@@ -1202,10 +1204,7 @@ footer::before {
                     </div>
                 </div>
                 
-                <div class="instructions">
-                    <p><strong>Instructions:</strong> Point your camera at a product barcode (UPC, EAN, QR). Ensure good lighting and hold steady. The scan will happen automatically.</p>
-                </div>
-                
+                             
                 <div class="controls">
                     <button id="startBarcodeScan" class="btn btn-primary">
                         <span class="btn-icon">📷</span> Start Barcode Scan
@@ -1222,7 +1221,7 @@ footer::before {
 
         <!-- OCR scanning panel -->
         <section id="ocrPanel" class="mode-content" role="tabpanel" aria-labelledby="ocrTab">
-            <h2>Ingredient OCR Scanner</h2>
+            <h4>Ingredient OCR Scanner</h4>
             <div class="camera-section">
                 <div class="camera-container">
                     <!-- Video preview for camera -->
@@ -1233,16 +1232,12 @@ footer::before {
                     <div id="imagePreview" style="display: none; width: 100%; height: 100%; background-size: contain; background-position: center; background-repeat: no-repeat;" aria-label="Preview of selected image"></div>
                 </div>
                 
-                <div class="instructions">
-                    <p><strong>Instructions:</strong> Choose an option below. For best OCR results, ensure good lighting and position the ingredient list clearly in frame.</p>
-                </div>
-                
+                                
                 <!-- OCR mode selection buttons -->
                 <div class="ocr-options">
                     <button id="takePhotoBtn" class="btn ocr-option-btn">
-                        <span class="btn-icon">📷</span>
-                        <span>Take Photo</span>
-                    </button>
+                        <span class="btn-icon">📷</span>Take Photo
+                     </button>
                     <div class="file-input-wrapper">
                         <!-- Hidden file input that will be triggered by the "From Gallery" button -->
                         <input type="file" id="imageUpload" accept="image/*" aria-label="Select image from gallery">
@@ -1270,7 +1265,7 @@ footer::before {
 
         <!-- Manual search panel -->
         <section id="manualPanel" class="mode-content" role="tabpanel" aria-labelledby="manualTab">
-            <h2>Manual Ingredient Check</h2>
+            <h4>Manual Ingredient Check</h4>
             <div class="manual-input">
                 <p>Type or paste ingredients (comma-separated or one per line):</p>
                 <textarea id="manualIngredients" placeholder="e.g., water, sugar, gelatin, E120, natural flavors..." rows="8" aria-label="Enter ingredients to check"></textarea>
